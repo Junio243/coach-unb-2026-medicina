@@ -6,6 +6,7 @@ import { useStore } from './store/useStore.js';
 import Header from './components/Header.jsx';
 import AccessibilityBar from './components/AccessibilityBar.jsx';
 import { supabase } from './services/supabaseClient.js';
+import Spinner from './components/Spinner.jsx';
 
 const Onboarding = React.lazy(() => import('./pages/Onboarding.jsx'));
 const Dashboard = React.lazy(() => import('./pages/Dashboard.jsx'));
@@ -21,6 +22,7 @@ const QuizPlay = React.lazy(() => import('./pages/QuizPlay.jsx'));
 const Subjects = React.lazy(() => import('./pages/Subjects.jsx'));
 const Professor = React.lazy(() => import('./pages/Professor.jsx'));
 const Psycho = React.lazy(() => import('./pages/Psycho.jsx'));
+const Home = React.lazy(() => import('./pages/Home.jsx'));
 
 
 const App = () => {
@@ -55,9 +57,9 @@ const App = () => {
                     <div className="flex-1 flex flex-col">
                          {isOnboardingComplete && <Header />}
                         <main className="flex-1 p-4 sm:p-6 lg:p-8 bg-slate-100 dark:bg-slate-800">
-                            <React.Suspense fallback={<div className="p-6">Carregando...</div>}>
+                            <React.Suspense fallback={<div className="p-6"><Spinner label="Carregando" /></div>}>
                                 <Routes>
-                                    <Route path="/" element={isOnboardingComplete ? <Navigate to="/dashboard" /> : <Navigate to="/onboarding" />} />
+                                    <Route path="/" element={<Home />} />
                                     <Route path="/onboarding" element={<Onboarding />} />
                                     <Route path="/dashboard" element={isOnboardingComplete ? <Dashboard /> : <Navigate to="/onboarding" />} />
                                     <Route path="/planner" element={isOnboardingComplete ? <Planner /> : <Navigate to="/onboarding" />} />

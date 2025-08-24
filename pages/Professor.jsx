@@ -3,12 +3,17 @@ import { useSearchParams } from "react-router-dom";
 import { professorExplain, generateFlashcards, generateSimulado } from "../services/geminiService.js";
 import { fetchVideos } from "../services/videoService.js";
 import { getHistoryItem } from "../services/historyService.js";
+import { listUserSubjects } from "../services/subjectsService.js";
+import Spinner from "../components/Spinner.jsx";
 
 export default function ProfessorPage() {
   const [params] = useSearchParams();
   const historyId = params.get("history");
   const [topic, setTopic] = useState("");
   const [subject, setSubject] = useState("");
+  const [subjects, setSubjects] = useState([]);
+  const [subjectsLoading, setSubjectsLoading] = useState(false);
+  const [subjectsError, setSubjectsError] = useState("");
   const [level, setLevel] = useState("iniciante");
   const [minutes, setMinutes] = useState(30);
   const [data, setData] = useState(null);
@@ -16,6 +21,22 @@ export default function ProfessorPage() {
   const [videoError, setVideoError] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function loadSubjects() {
+      try {
+        setSubjectsLoading(true);
+        setSubjectsError("");
+        const res = await listUserSubjects();
+        setSubjects(res);
+      } catch (e) {
+        setSubjectsError("Falha ao carregar matérias");
+      } finally {
+        setSubjectsLoading(false);
+      }
+    }
+    loadSubjects();
+  }, []);
 
   useEffect(() => {
     if (historyId) {
@@ -77,6 +98,28 @@ export default function ProfessorPage() {
               onChange={(e) => setSubject(e.target.value)}
               required
             />
+            {subjectsLoading ? (
+              <Spinner label="Carregando" />
+            ) : subjectsError ? (
+              <div className="text-red-600 text-sm mt-1">{subjectsError}</div>
+            ) : subjects.length > 0 ? (
+              <div className="flex flex-wrap gap-1 mt-2">
+                {subjects.map((s) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => setSubject(s.subject)}
+                    className={`px-2 py-1 rounded-full text-xs border ${subject === s.subject ? 'bg-indigo-600 text-white' : 'bg-slate-100'}`}
+                  >
+                    {s.subject}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="text-xs text-slate-600 mt-1">
+                Nenhuma matéria salva — adicione em <a href="#/subjects" className="underline">/#/subjects</a>
+              </div>
+            )}
           </div>
           <div>
             <label className="block text-sm">Tópico</label>
@@ -112,15 +155,17 @@ export default function ProfessorPage() {
           </div>
           <button
             disabled={loading}
-            className="bg-blue-600 text-white rounded px-4 py-2"
+            className="bg-blue-600 text-white rounded px-4 py-2 flex items-center justify-center"
           >
-            {loading ? "Gerando..." : "Gerar Aula"}
+            {loading ? <Spinner label="" /> : "Gerar Aula"}
           </button>
           {error && <div className="text-red-600 text-sm">{error}</div>}
         </form>
       )}
 
-      {data && (
+      {loading && <Spinner fullPage label="Gerando" />}
+
+      {data && !loading && (
         <section className="space-y-6">
           <div>
             <h2 className="text-xl font-semibold mb-2">{data.title}</h2>
