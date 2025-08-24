@@ -13,14 +13,14 @@ function ensureKey() {
   }
 }
 
-function readText(res) {
+async function readText(res) {
   if (!res) return "";
   // O SDK expõe .text como string (amostra oficial usa response.text)
   try {
-    if (typeof res.text === "function") return res.text();
+    if (typeof res.text === "function") return await res.text();
     if (typeof res.text === "string")   return res.text;
     if (res.response && typeof res.response.text === "function") {
-      return res.response.text();
+      return await res.response.text();
     }
   } catch {}
   return "";
@@ -67,7 +67,7 @@ export async function generateStudyPlan(userCtx = {}) {
       config: { responseMimeType: "application/json", temperature: 0.7 }
     });
 
-    const txt = readText(res);
+    const txt = await readText(res);
     const data = safeParseJSON(txt);
     return data;
   } catch (err) {
@@ -94,7 +94,7 @@ Responda APENAS com um array JSON (sem texto fora do JSON).`;
       config: { responseMimeType: "application/json", temperature: 0.7 }
     });
 
-    const txt = readText(res);
+    const txt = await readText(res);
     const data = safeParseJSON(txt);
     if (!Array.isArray(data)) throw new Error("Formato inesperado (esperava array).");
     return data;
@@ -133,7 +133,7 @@ Sem texto fora do JSON.`;
       config: { responseMimeType: "application/json", temperature: 0.7 }
     });
 
-    const txt = readText(res);
+    const txt = await readText(res);
     const data = safeParseJSON(txt);
     if (!data?.questions || !Array.isArray(data.questions)) {
       throw new Error("Formato inesperado (esperava objeto com 'questions').");
@@ -155,5 +155,5 @@ export async function getTutorResponse(question) {
     contents: [{ role: "user", parts: [{ text: question }]}],
     config: { temperature: 0.5 }
   });
-  return readText(res);
+  return await readText(res);
 }
