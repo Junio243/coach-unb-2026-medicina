@@ -89,7 +89,7 @@ export default function SimuladosPage() {
               {q.options?.map((opt, i) => (
                 <li key={i}>
                   {opt}
-                  {/* Se quiser mostrar qual é a correta, descomente: */}
+                  {/* Para marcar a correta, descomente: */}
                   {/* {i === q.correctIndex ? " ✅" : ""} */}
                 </li>
               ))}
