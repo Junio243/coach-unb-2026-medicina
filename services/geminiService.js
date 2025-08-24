@@ -13,6 +13,19 @@ function ensureKey() {
   }
 }
 
+function readText(res) {
+  if (!res) return "";
+  // SDKs podem expor .text() (função) ou .text (string). Tentamos ambos.
+  try {
+    if (typeof res.text === "function") return res.text();
+    if (typeof res.text === "string")   return res.text;
+    if (res.response && typeof res.response.text === "function") {
+      return res.response.text();
+    }
+  } catch {}
+  return "";
+}
+
 function safeParseJSON(txt) {
   try { return JSON.parse(txt); }
   catch (e) {
@@ -21,126 +34,107 @@ function safeParseJSON(txt) {
   }
 }
 
-/** ===== FLASHCARDS =====
- * Gera um array de flashcards [{ id, front, back, difficulty? }]
- * Parâmetros:
- *   subject: string (ex.: "Citologia"), 
- *   count:   number (ex.: 12),
- *   level:   "iniciante" | "intermediario" | "avancado" (opcional)
- */
+/* =============== PLANO SEMANAL =============== */
+function buildWeeklyPrompt(ctx = {}) {
+  const objetivo       = ctx.objetivo ?? "Aprovação em Medicina na UnB 2026";
+  const pontosFracos   = ctx.pontosFracos ?? "Física e Matemática";
+  const disponibilidade= ctx.disponibilidade ?? "Manhãs de segunda a sábado";
+
+  return `Gere um plano de estudos semanal (PT-BR) para: ${objetivo}.
+- Pontos fracos: ${pontosFracos}
+- Disponibilidade: ${disponibilidade}
+
+FORMATO DE RESPOSTA: retorne APENAS JSON válido, no formato:
+{
+  "monday":    [ { "id": "1", "day":"monday", "startTime":"08:00", "endTime":"09:30", "subject":"...", "topic":"...", "type":"..." } ],
+  "tuesday":   [ ... ],
+  "wednesday": [ ... ],
+  "thursday":  [ ... ],
+  "friday":    [ ... ],
+  "saturday":  [ ... ],
+  "sunday":    [ ... ]
+}
+Sem texto fora do JSON.`;
+}
+
+export async function generateStudyPlan(userCtx = {}) {
+  ensureKey();
+  const ai = new GoogleGenAI({ apiKey: API_KEY });
+
+  const prompt = buildWeeklyPrompt(userCtx);
+
+  try {
+    const res = await ai.models.generateContent({
+      model: MODEL,
+      contents: prompt
+    });
+
+    const txt = readText(res);
+    const data = safeParseJSON(txt);
+    return data;
+  } catch (err) {
+    console.error("[generateStudyPlan] erro:", err);
+    throw new Error("Falha ao gerar o plano. Verifique chave/domínio no AI Studio.");
+  }
+}
+
+// Alias para quem chamar em PT-BR
+export const gerarPlanoSemanal = (ctx) => generateStudyPlan(ctx);
+
+/* =============== FLASHCARDS =============== */
 export async function generateFlashcards({ subject = "", count = 10, level = "intermediario" } = {}) {
   ensureKey();
   const ai = new GoogleGenAI({ apiKey: API_KEY });
 
   const prompt = `
 Gere ${count} flashcards em PT-BR sobre "${subject}" (nível: ${level}).
-Campos esperados:
-- id (string curto único)
-- front (pergunta/termo)
-- back (resposta/definição direta, clara)
-- difficulty (iniciante|intermediario|avancado)
-Responda APENAS no JSON do schema.
-`;
-
-  // Schema do array de flashcards
-  const schema = {
-    type: "array",
-    items: {
-      type: "object",
-      properties: {
-        id: { type: "string" },
-        front: { type: "string" },
-        back: { type: "string" },
-        difficulty: { type: "string" }
-      },
-      required: ["id", "front", "back"]
-    }
-  };
+Cada item: { "id": "fc-1", "front": "pergunta/termo", "back": "resposta", "difficulty":"iniciante|intermediario|avancado" }
+Responda APENAS com um array JSON (sem texto fora do JSON).
+Exemplo:
+[
+  {"id":"fc-1","front":"...","back":"...","difficulty":"intermediario"},
+  {"id":"fc-2","front":"...","back":"...","difficulty":"intermediario"}
+]`;
 
   try {
-    const res = await ai.models.generateContent({
-      model: MODEL,
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: schema,
-        temperature: 0.7
-      }
-    });
-
-    const txt = res?.text ?? "";
+    const res = await ai.models.generateContent({ model: MODEL, contents: prompt });
+    const txt = readText(res);
     const data = safeParseJSON(txt);
     if (!Array.isArray(data)) throw new Error("Formato inesperado (esperava array).");
     return data;
   } catch (err) {
     console.error("[generateFlashcards] erro:", err);
-    throw new Error("Falha ao gerar flashcards. Verifique a chave/domínio no AI Studio.");
+    throw new Error("Falha ao gerar flashcards. Verifique chave/domínio no AI Studio.");
   }
 }
 
-/** ===== SIMULADOS =====
- * Gera um simulado com questões de múltipla escolha:
- * Retorno:
- *   { questions: [{ id, statement, options[5], correctIndex, explanation? }] }
- * Parâmetros:
- *   subject: string (ex.: "Fisiologia"),
- *   count:   number (ex.: 10),
- *   level:   "iniciante" | "intermediario" | "avancado" (opcional)
- */
+// Alias opcional
+export const gerarFlashcards = generateFlashcards;
+
+/* =============== SIMULADO =============== */
 export async function generateSimulado({ subject = "", count = 10, level = "intermediario" } = {}) {
   ensureKey();
   const ai = new GoogleGenAI({ apiKey: API_KEY });
 
   const prompt = `
 Monte um simulado em PT-BR de ${count} questões de "${subject}" (nível: ${level}).
-Cada questão deve ter:
-- id (string curto)
-- statement (enunciado claro)
-- options (array de 5 alternativas em string)
-- correctIndex (0..4)
-- explanation (breve justificativa da correta)
-Responda APENAS no JSON do schema a seguir.
-`;
-
-  // Schema do objeto com array de questões
-  const schema = {
-    type: "object",
-    properties: {
-      questions: {
-        type: "array",
-        items: {
-          type: "object",
-          properties: {
-            id: { type: "string" },
-            statement: { type: "string" },
-            options: {
-              type: "array",
-              items: { type: "string" },
-              minItems: 5,
-              maxItems: 5
-            },
-            correctIndex: { type: "integer" },
-            explanation: { type: "string" }
-          },
-          required: ["id", "statement", "options", "correctIndex"]
-        }
-      }
-    },
-    required: ["questions"]
-  };
+Formato EXATO (JSON):
+{
+  "questions": [
+    {
+      "id": "q1",
+      "statement": "enunciado",
+      "options": ["A) ...","B) ...","C) ...","D) ...","E) ..."],
+      "correctIndex": 0,
+      "explanation": "por que está correta"
+    }
+  ]
+}
+Sem texto fora do JSON.`;
 
   try {
-    const res = await ai.models.generateContent({
-      model: MODEL,
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: schema,
-        temperature: 0.7
-      }
-    });
-
-    const txt = res?.text ?? "";
+    const res = await ai.models.generateContent({ model: MODEL, contents: prompt });
+    const txt = readText(res);
     const data = safeParseJSON(txt);
     if (!data?.questions || !Array.isArray(data.questions)) {
       throw new Error("Formato inesperado (esperava objeto com 'questions').");
@@ -148,10 +142,20 @@ Responda APENAS no JSON do schema a seguir.
     return data;
   } catch (err) {
     console.error("[generateSimulado] erro:", err);
-    throw new Error("Falha ao gerar simulado. Verifique a chave/domínio no AI Studio.");
+    throw new Error("Falha ao gerar simulado. Verifique chave/domínio no AI Studio.");
   }
 }
 
-/** ===== ALIASES para compatibilidade com código antigo ===== */
-export const gerarFlashcards = generateFlashcards;
-export const gerarSimulado   = generateSimulado;
+// Alias opcional
+export const gerarSimulado = generateSimulado;
+
+/* =============== Tutor (texto livre) =============== */
+export async function getTutorResponse(question) {
+  ensureKey();
+  const ai = new GoogleGenAI({ apiKey: API_KEY });
+  const res = await ai.models.generateContent({
+    model: MODEL,
+    contents: [{ role: "user", parts: [{ text: question }]}]
+  });
+  return readText(res);
+}
