@@ -13,6 +13,7 @@ This repository contains everything you need to run the Coach UnB app locally or
   - `GEMINI_API_KEY` – Client Key do Google AI Studio
   - `VITE_SUPABASE_URL`
   - `VITE_SUPABASE_ANON_KEY`
+  - `VITE_NEWS_PROXY_URL` – URL do serviço de notícias (ver abaixo)
 
 Configure-as em `.env.local` para desenvolvimento e em _Environment Variables_ no Render para produção.
 
@@ -34,3 +35,11 @@ No [Google AI Studio](https://aistudio.google.com/app/apikey), crie uma Client K
 ## Supabase
 
 Execute o script `supabase.sql` para criar as tabelas de histórico, quizzes e matérias favoritas com as políticas de RLS necessárias.
+
+## News proxy
+
+Há uma micro-API Node em `/api/news-proxy` usada para buscar notícias recentes do exame via Google News RSS.
+
+No Render, crie um novo **Web Service** apontando para essa pasta (`api/news-proxy`) com **Node 20** e defina a env `ALLOW_ORIGIN=https://coach-unb-2026-medicina.onrender.com`.
+
+Use a URL pública do serviço na variável `VITE_NEWS_PROXY_URL` do site principal.

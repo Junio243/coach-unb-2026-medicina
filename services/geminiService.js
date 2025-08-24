@@ -48,17 +48,78 @@ async function retryable(fn, attempt = 1) {
   }
 }
 
+/* =============== EXAM PROFILE =============== */
+
+function buildExamProfilePrompt({ targetExam = "", university = "", location = "" }) {
+  return `Você é um orientador de estudos para iniciantes absolutos. Dado o exame "${targetExam}" da universidade "${university}" em "${location}", descubra as matérias e perfil geral dessa prova.
+Responda APENAS com JSON válido no formato:
+{
+  "exam_overview": {
+    "exam_name": "string",
+    "format": "string",
+    "subjects": ["string"],
+    "skills_required": ["string"],
+    "strategy_tips": ["string"]
+  },
+  "syllabus_map": { "Matemática": ["Módulo 1"], "Biologia": ["..."] },
+  "flashcards_seeds": ["string"],
+  "quiz_seeds": ["string"]
+}
+Se não houver dados oficiais, use formulações cautelosas como "tipicamente" ou "frequente em vestibulares brasileiros" e organize as matérias do básico ao avançado.`;
+}
+
+export async function discoverExamProfile(ctx = {}) {
+  ensureKey();
+  const ai = new GoogleGenAI({ apiKey: API_KEY });
+  const prompt = buildExamProfilePrompt(ctx);
+
+  try {
+    const res = await retryable(() =>
+      ai.models.generateContent({
+        model: MODEL,
+        contents: prompt,
+        config: { responseMimeType: "application/json", temperature: 0.7 },
+      })
+    );
+
+    const txt = await readText(res);
+    const data = safeParseJSON(txt);
+
+    try {
+      await saveHistory({
+        kind: "plan",
+        subject: ctx?.targetExam || "Exame",
+        params: { ...ctx, kind: "exam_profile" },
+        payload: data,
+      });
+    } catch (e) {
+      console.error("[discoverExamProfile] saveHistory erro:", e);
+    }
+
+    return data;
+  } catch (err) {
+    console.error("[discoverExamProfile] erro:", err);
+    throw handleError(err, "Falha ao descobrir o perfil do exame.");
+  }
+}
+
 /* =============== PLANO DE ESTUDOS COMPLETO =============== */
 
 function buildPlanPrompt(ctx = {}) {
   const targetExam = ctx.targetExam || "prova";
+  const university = ctx.university || "";
+  const location = ctx.location || "";
   const favs = Array.isArray(ctx.favorites) && ctx.favorites.length
     ? ctx.favorites.join(", ")
     : "nenhuma";
   const weaknesses = ctx.weaknesses || "";
   const minutes = ctx.daily_minutes || 120;
+  const discovered = Array.isArray(ctx.discoveredSubjects) && ctx.discoveredSubjects.length
+    ? ctx.discoveredSubjects.join(", ")
+    : "";
 
-  return `Você é um tutor para iniciantes absolutos. Crie um plano de estudos em PT-BR para ${targetExam}.
+  return `Você é um tutor para iniciantes absolutos. Crie um plano de estudos em PT-BR para ${targetExam} (${university} ${location}).
+Matérias do exame: ${discovered || "utilize matérias comuns de vestibulares brasileiros"}.
 Contexto do usuário:
 - Matérias favoritas: ${favs}
 - Pontos fracos: ${weaknesses}

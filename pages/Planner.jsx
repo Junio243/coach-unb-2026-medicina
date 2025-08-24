@@ -5,6 +5,8 @@ import {
   generateSimulado,
 } from "../services/geminiService.js";
 import { listUserSubjects } from "../services/subjectsService.js";
+import { autoPrepareExam } from "../services/examProfileService.js";
+import { fetchNews } from "../services/newsService.js";
 
 const DAYS = [
   "monday",
@@ -21,9 +23,17 @@ export default function PlannerPage() {
   const [weaknesses, setWeaknesses] = useState("");
   const [dailyMinutes, setDailyMinutes] = useState(120);
 
+  const [targetExam, setTargetExam] = useState("");
+  const [university, setUniversity] = useState("");
+  const [location, setLocation] = useState("");
+
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [plan, setPlan] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [discovered, setDiscovered] = useState([]);
+  const [news, setNews] = useState([]);
+  const [newsError, setNewsError] = useState("");
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
   const [subjects, setSubjects] = useState([]);
@@ -32,10 +42,55 @@ export default function PlannerPage() {
     listUserSubjects().then(setSubjects).catch(() => {});
   }, []);
 
+  const chipSubjects = Array.from(
+    new Set([...(discovered || []), ...subjects.map((s) => s.subject)])
+  );
+  const examOverview = profile?.exam_overview || plan?.exam_overview || {};
+
   function toggleFavorite(subj) {
     setFavorites((prev) =>
       prev.includes(subj) ? prev.filter((s) => s !== subj) : [...prev, subj]
     );
+  }
+
+  async function onAutoPrepare() {
+    try {
+      setError("");
+      setInfo("");
+      setLoading(true);
+
+      const prof = await autoPrepareExam({ targetExam, university, location });
+      setProfile(prof);
+      const subs = prof?.exam_overview?.subjects || [];
+      setDiscovered(subs);
+
+      const planData = await generateStudyPlan({
+        discoveredSubjects: subs,
+        targetExam,
+        university,
+        location,
+      });
+      setPlan(planData);
+      setInfo("Plano gerado!");
+
+      try {
+        const newsItems = await fetchNews({
+          queries: [targetExam, `${university} vestibular`],
+          limit: 12,
+        });
+        setNews(newsItems);
+        setNewsError("");
+      } catch (e) {
+        setNews([]);
+        setNewsError("notícias indisponíveis no momento");
+      }
+
+      listUserSubjects().then(setSubjects).catch(() => {});
+    } catch (e) {
+      setError(e.message || "Falha ao preparar automaticamente.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function onGerarPlano() {
@@ -58,12 +113,15 @@ export default function PlannerPage() {
   }
 
   async function onGenerateFlashcards() {
-    if (!plan?.flashcards_seeds?.length) return;
+    const seeds = profile?.flashcards_seeds || [];
+    const seed = seeds.length
+      ? seeds.slice(0, 2).join(", ")
+      : favorites[0] || discovered[0];
+    if (!seed) return;
     try {
       setError("");
       setInfo("");
       setActionLoading(true);
-      const seed = plan.flashcards_seeds.slice(0, 2).join(", ");
       await generateFlashcards({ subject: seed });
       setInfo("Flashcards gerados a partir do plano. Veja na aba de Flashcards.");
     } catch (e) {
@@ -74,12 +132,15 @@ export default function PlannerPage() {
   }
 
   async function onGenerateSimulado() {
-    if (!plan?.quiz_seeds?.length) return;
+    const seeds = profile?.quiz_seeds || [];
+    const seed = seeds.length
+      ? seeds.slice(0, 2).join(", ")
+      : favorites[0] || discovered[0];
+    if (!seed) return;
     try {
       setError("");
       setInfo("");
       setActionLoading(true);
-      const seed = plan.quiz_seeds.slice(0, 2).join(", ");
       await generateSimulado({ subject: seed });
       setInfo("Simulado gerado a partir do plano. Veja na aba de Simulados.");
     } catch (e) {
@@ -103,19 +164,47 @@ export default function PlannerPage() {
     <main className="p-4 md:p-6 max-w-7xl mx-auto">
       <h1 className="text-2xl font-bold mb-4">Planner</h1>
 
+      <div className="grid gap-2 sm:grid-cols-4 mb-6">
+        <input
+          className="border rounded px-3 py-2"
+          placeholder="Exame"
+          value={targetExam}
+          onChange={(e) => setTargetExam(e.target.value)}
+        />
+        <input
+          className="border rounded px-3 py-2"
+          placeholder="Universidade"
+          value={university}
+          onChange={(e) => setUniversity(e.target.value)}
+        />
+        <input
+          className="border rounded px-3 py-2"
+          placeholder="Local/UF"
+          value={location}
+          onChange={(e) => setLocation(e.target.value)}
+        />
+        <button
+          onClick={onAutoPrepare}
+          disabled={loading}
+          className="bg-blue-600 text-white rounded px-4 py-2 disabled:opacity-50"
+        >
+          {loading ? "Preparando..." : "Preparar tudo automaticamente"}
+        </button>
+      </div>
+
       <div className="space-y-4 mb-6">
-        {subjects.length > 0 && (
+        {chipSubjects.length > 0 && (
           <div>
-            <div className="mb-2 text-sm">Matérias favoritas</div>
+            <div className="mb-2 text-sm">Matérias sugeridas</div>
             <div className="flex flex-wrap gap-2">
-              {subjects.map((s) => (
+              {chipSubjects.map((s) => (
                 <button
-                  key={s.id}
+                  key={s}
                   type="button"
-                  onClick={() => toggleFavorite(s.subject)}
-                  className={`px-2 py-1 rounded-2xl text-sm border ${favorites.includes(s.subject) ? "bg-blue-600 text-white" : "bg-slate-100"}`}
+                  onClick={() => toggleFavorite(s)}
+                  className={`px-2 py-1 rounded-2xl text-sm border ${favorites.includes(s) ? "bg-blue-600 text-white" : "bg-slate-100"}`}
                 >
-                  {s.subject}
+                  {s}
                 </button>
               ))}
               <a
@@ -199,36 +288,36 @@ export default function PlannerPage() {
             </a>
           </div>
 
-          <section>
-            <h2 className="text-xl font-semibold mb-3">Visão da Prova</h2>
-            <div className="bg-white rounded-2xl shadow-md p-5">
-              <h3 className="text-lg font-bold">{plan.exam_overview?.exam_name}</h3>
-              <p className="mt-1 text-sm text-slate-600">
-                Formato: {plan.exam_overview?.format}
-              </p>
-              {plan.exam_overview?.subjects && (
-                <ul className="mt-3 list-disc list-inside text-sm">
-                  {plan.exam_overview.subjects.map((s, i) => (
-                    <li key={i}>{s}</li>
-                  ))}
-                </ul>
-              )}
-              {plan.exam_overview?.skills_required && (
-                <ul className="mt-3 list-disc list-inside text-sm">
-                  {plan.exam_overview.skills_required.map((s, i) => (
-                    <li key={i}>{s}</li>
-                  ))}
-                </ul>
-              )}
-              {plan.exam_overview?.strategy_tips && (
-                <ul className="mt-3 list-disc list-inside text-sm">
-                  {plan.exam_overview.strategy_tips.map((s, i) => (
-                    <li key={i}>{s}</li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </section>
+            <section>
+              <h2 className="text-xl font-semibold mb-3">Visão da Prova</h2>
+              <div className="bg-white rounded-2xl shadow-md p-5">
+                <h3 className="text-lg font-bold">{examOverview.exam_name}</h3>
+                <p className="mt-1 text-sm text-slate-600">
+                  Formato: {examOverview.format}
+                </p>
+                {examOverview.subjects && (
+                  <ul className="mt-3 list-disc list-inside text-sm">
+                    {examOverview.subjects.map((s, i) => (
+                      <li key={i}>{s}</li>
+                    ))}
+                  </ul>
+                )}
+                {examOverview.skills_required && (
+                  <ul className="mt-3 list-disc list-inside text-sm">
+                    {examOverview.skills_required.map((s, i) => (
+                      <li key={i}>{s}</li>
+                    ))}
+                  </ul>
+                )}
+                {examOverview.strategy_tips && (
+                  <ul className="mt-3 list-disc list-inside text-sm">
+                    {examOverview.strategy_tips.map((s, i) => (
+                      <li key={i}>{s}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </section>
 
           <section>
             <h2 className="text-xl font-semibold mb-3">Comece Aqui (Semana 0)</h2>
@@ -275,44 +364,67 @@ export default function PlannerPage() {
             </div>
           </section>
 
-          <section>
-            <h2 className="text-xl font-semibold mb-3">Plano Semanal</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-4">
-              {DAYS.map((d) => (
-                <div key={d} className="flex flex-col gap-2">
-                  <h3 className="text-center font-semibold capitalize">{d}</h3>
-                  {(plan.week_plan?.[d] || []).map((b) => (
-                    <div key={b.id} className="bg-white rounded-2xl shadow-md p-3 text-sm">
-                      <div className="font-medium">
-                        {b.startTime} - {b.endTime}
+            <section>
+              <h2 className="text-xl font-semibold mb-3">Plano Semanal</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-7 gap-4">
+                {DAYS.map((d) => (
+                  <div key={d} className="flex flex-col gap-2">
+                    <h3 className="text-center font-semibold capitalize">{d}</h3>
+                    {(plan.week_plan?.[d] || []).map((b) => (
+                      <div key={b.id} className="bg-white rounded-2xl shadow-md p-3 text-sm">
+                        <div className="font-medium">
+                          {b.startTime} - {b.endTime}
+                        </div>
+                        <div className="mt-1">
+                          {b.subject} - {b.topic}
+                        </div>
+                        <span className="inline-block mt-1 text-xs rounded px-2 py-0.5 bg-blue-100 text-blue-800">
+                          {b.type}
+                        </span>
+                        {b.why && (
+                          <div className="mt-1 text-xs text-slate-600">{b.why}</div>
+                        )}
+                        {b.resources?.length > 0 && (
+                          <ul className="mt-1 list-disc list-inside text-xs text-slate-700">
+                            {b.resources.map((r, i) => (
+                              <li key={i}>{r}</li>
+                            ))}
+                          </ul>
+                        )}
+                        {b.task && (
+                          <div className="mt-1 text-xs italic">Tarefa: {b.task}</div>
+                        )}
                       </div>
-                      <div className="mt-1">
-                        {b.subject} - {b.topic}
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h2 className="text-xl font-semibold mb-3">Atualizações e Notícias</h2>
+              {newsError ? (
+                <div className="text-sm text-slate-600">{newsError}</div>
+              ) : (
+                <div className="grid md:grid-cols-3 gap-4">
+                  {news.map((n, i) => (
+                    <a
+                      key={i}
+                      href={n.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="bg-white rounded-2xl shadow-md p-4 hover:bg-slate-50"
+                    >
+                      <div className="font-semibold text-sm">{n.title}</div>
+                      <div className="text-xs text-slate-600 mt-1">
+                        {n.source} - {new Date(n.publishedAt).toLocaleDateString("pt-BR")}
                       </div>
-                      <span className="inline-block mt-1 text-xs rounded px-2 py-0.5 bg-blue-100 text-blue-800">
-                        {b.type}
-                      </span>
-                      {b.why && (
-                        <div className="mt-1 text-xs text-slate-600">{b.why}</div>
-                      )}
-                      {b.resources?.length > 0 && (
-                        <ul className="mt-1 list-disc list-inside text-xs text-slate-700">
-                          {b.resources.map((r, i) => (
-                            <li key={i}>{r}</li>
-                          ))}
-                        </ul>
-                      )}
-                      {b.task && (
-                        <div className="mt-1 text-xs italic">Tarefa: {b.task}</div>
-                      )}
-                    </div>
+                    </a>
                   ))}
                 </div>
-              ))}
-            </div>
-          </section>
-        </div>
-      )}
+              )}
+            </section>
+          </div>
+        )}
     </main>
   );
 }
