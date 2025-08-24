@@ -8,17 +8,19 @@
     "build": "vite build",
     "preview": "vite preview"
   },
-  "dependencies": {
-    "react": "18.3.1",
-"react-dom": "18.3.1",
-    "react-router-dom": "6.24.1",
-    "@google/genai": "0.15.0",
-    "zustand": "^5.0.8",
-    "recharts": "2.12.7"
-  },
-  "devDependencies": {
-    "@types/node": "^22.14.0",
-    "typescript": "~5.8.2",
-    "vite": "^6.2.0"
-  }
+ "dependencies": {
+  "react": "18.3.1",
+  "react-dom": "18.3.1",
+  "react-router-dom": "6.24.1",
+  "@google/genai": "0.15.0",
+  "zustand": "^5.0.8",
+  "recharts": "2.12.7"
+},
+"devDependencies": {
+  "@types/node": "^22.14.0",
+  "typescript": "~5.8.2",
+  "vite": "^6.2.0"
+},
+"engines": {
+  "node": "20.x"
 }
