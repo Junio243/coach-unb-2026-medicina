@@ -53,7 +53,12 @@ const Tutor = () => {
                         type="text"
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && !isLoading && handleSend()}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !isLoading) {
+                                e.preventDefault();
+                                handleSend();
+                            }
+                        }}
                         placeholder="Pergunte sobre qualquer tópico da UnB..."
                         className="flex-1 p-2 rounded-md bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         disabled={isLoading}
