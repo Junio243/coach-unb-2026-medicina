@@ -12,3 +12,9 @@ test('throws error with expected message for invalid JSON', () => {
   const badJson = '{foo: 1';
   assert.throws(() => safeParseJSON(badJson), { message: 'Resposta inválida do modelo.' });
 });
+
+test('parses JSON even when surrounded by extraneous text', () => {
+  const noisyJson = 'resultado:\n```json\n{"foo": 1}\n``` fim';
+  const result = safeParseJSON(noisyJson);
+  assert.deepEqual(result, { foo: 1 });
+});
