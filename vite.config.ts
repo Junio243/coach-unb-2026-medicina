@@ -1,30 +1,27 @@
-// vite.config.ts
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { defineConfig, loadEnv } from 'vite';
-
-// __dirname para ESM
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-export default defineConfig(({ mode }) => {
-  // carrega variáveis do Render (GEMINI_API_KEY) no momento do build
-  const env = loadEnv(mode, process.cwd(), '');
-
-  return {
-    // Render hospeda na raiz
-    base: '/',
-
-    // injeta a chave no bundle (use somente Client Key com domínio restrito!)
-    define: {
-      'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-    },
-
-    resolve: {
-      alias: {
-        '@': path.resolve(__dirname, '.'),
-      },
-    },
-  };
-});
+{
+  "name": "coach-unb-2026-medicina",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-router-dom": "6.24.1",
+    "@google/genai": "0.15.0",
+    "zustand": "^5.0.8",
+    "recharts": "2.12.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.0"
+  },
+  "engines": {
+    "node": "20.x"
+  }
+}
