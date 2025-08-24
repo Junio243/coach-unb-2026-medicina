@@ -1,6 +1,7 @@
 // services/geminiService.js
 import { GoogleGenAI } from "@google/genai";
 import { safeParseJSON } from "./safeParseJSON.js";
+import { saveHistory } from "./historyService.js";
 
 const API_KEY = process.env.GEMINI_API_KEY || "";
 const MODEL = "gemini-2.5-flash";
@@ -47,24 +48,70 @@ async function retryable(fn, attempt = 1) {
   }
 }
 
-/* =============== PLANO SEMANAL =============== */
-function buildWeeklyPrompt(ctx = {}) {
-  const objetivo        = ctx.objetivo ?? "Aprovação em Medicina na UnB 2026";
-  const pontosFracos    = ctx.pontosFracos ?? "Física e Matemática";
-  const disponibilidade = ctx.disponibilidade ?? "Manhãs de segunda a sábado";
-  return `Gere um plano de estudos semanal (PT-BR) para: ${objetivo}.
-- Pontos fracos: ${pontosFracos}
-- Disponibilidade: ${disponibilidade}
+/* =============== PLANO DE ESTUDOS COMPLETO =============== */
 
-Responda APENAS com JSON válido no formato:
+function buildPlanPrompt(ctx = {}) {
+  const targetExam = ctx.targetExam || "prova";
+  const favs = Array.isArray(ctx.favorites) && ctx.favorites.length
+    ? ctx.favorites.join(", ")
+    : "nenhuma";
+  const weaknesses = ctx.weaknesses || "";
+  const minutes = ctx.daily_minutes || 120;
+
+  return `Você é um tutor para iniciantes absolutos. Crie um plano de estudos em PT-BR para ${targetExam}.
+Contexto do usuário:
+- Matérias favoritas: ${favs}
+- Pontos fracos: ${weaknesses}
+- Carga diária disponível: ${minutes} minutos
+
+Cada bloco do week_plan deve ter o formato:
 {
-  "monday":[{"id":"1","day":"monday","startTime":"08:00","endTime":"09:30","subject":"...","topic":"...","type":"..."}],
-  "tuesday":[...],
-  "wednesday":[...],
-  "thursday":[...],
-  "friday":[...],
-  "saturday":[...],
-  "sunday":[...]
+  "id": "string",
+  "day": "monday|tuesday|...",
+  "startTime": "HH:MM",
+  "endTime": "HH:MM",
+  "subject": "string",
+  "topic": "string",
+  "type": "Teoria|Exercícios|Revisão|Simulado|Redação",
+  "why": "explicação curta do porquê desse bloco para iniciantes",
+  "resources": ["vídeo/playlist sugerida", "capítulo genérico", "tipo de exercício"],
+  "task": "tarefa simples que um iniciante consegue executar"
+}
+
+Gere um plano completo seguindo exatamente o schema abaixo e responda APENAS com JSON válido:
+{
+  "exam_overview": {
+    "exam_name": "string",
+    "format": "string",
+    "subjects": ["string"],
+    "skills_required": ["string"],
+    "strategy_tips": ["string"]
+  },
+  "onboarding_zero": {
+    "week_goal": "string",
+    "micro_lessons": [
+      { "title": "string", "objective": "string", "resources": ["string"], "practice": "string" }
+    ]
+  },
+  "roadmap": [
+    { "week": 1, "focus": "string", "outcomes": ["string"] },
+    { "week": 2, "focus": "string", "outcomes": ["string"] },
+    { "week": 3, "focus": "string", "outcomes": ["string"] },
+    { "week": 4, "focus": "string", "outcomes": ["string"] }
+  ],
+  "week_plan": {
+    "monday":    [],
+    "tuesday":   [],
+    "wednesday": [],
+    "thursday":  [],
+    "friday":    [],
+    "saturday":  [],
+    "sunday":    []
+  },
+  "flashcards_seeds": ["string"],
+  "quiz_seeds": ["string"],
+  "habits": ["string"],
+  "metrics": { "daily_minutes_target": 120, "pomodoro_minutes": 25, "review_cycles_per_week": 3 }
 }`;
 }
 
@@ -76,13 +123,25 @@ export async function generateStudyPlan(userCtx = {}) {
     const res = await retryable(() =>
       ai.models.generateContent({
         model: MODEL,
-        contents: buildWeeklyPrompt(userCtx),
+        contents: buildPlanPrompt(userCtx),
         config: { responseMimeType: "application/json", temperature: 0.7 },
       })
     );
 
     const txt = await readText(res);
     const data = safeParseJSON(txt);
+
+    try {
+      await saveHistory({
+        kind: "plan",
+        subject: userCtx?.targetExam || "Prova",
+        params: userCtx || {},
+        payload: data,
+      });
+    } catch (e) {
+      console.error("[generateStudyPlan] saveHistory erro:", e);
+    }
+
     return data;
   } catch (err) {
     console.error("[generateStudyPlan] erro:", err);
