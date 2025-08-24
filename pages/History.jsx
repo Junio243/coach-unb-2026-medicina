@@ -5,9 +5,12 @@ import { useNavigate } from "react-router-dom";
 
 export default function HistoryPage() {
   const [kind, setKind] = useState("");
+  const [search, setSearch] = useState("");
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [selected, setSelected] = useState(null);
+  const [showJson, setShowJson] = useState(false);
   const navigate = useNavigate();
 
   async function load() {
@@ -44,22 +47,123 @@ export default function HistoryPage() {
     navigate(`/flashcards/${item.id}`);
   }
 
-  return (
-    <main className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Histórico</h1>
+  const filtered = items.filter((i) =>
+    search ? (i.subject || "").toLowerCase().includes(search.toLowerCase()) : true
+  );
 
-      <div className="mb-4">
-        <label className="mr-2">Filtrar:</label>
-        <select
-          className="border rounded px-2 py-1"
-          value={kind}
-          onChange={(e) => setKind(e.target.value)}
-        >
-          <option value="">todos</option>
-          <option value="plan">planos</option>
-          <option value="flashcards">flashcards</option>
-          <option value="quiz">simulados</option>
-        </select>
+  function renderCard(item) {
+    const date = new Date(item.created_at).toLocaleDateString("pt-BR");
+    if (item.kind === "plan") {
+      const subs = item.payload?.exam_overview?.subjects || [];
+      return (
+        <div key={item.id} className="rounded-2xl shadow-md p-4 bg-white">
+          <div className="font-semibold">Plano salvo em {date}</div>
+          {subs.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-2 text-xs">
+              {subs.map((s, i) => (
+                <span key={i} className="bg-slate-200 px-2 py-0.5 rounded-full">{s}</span>
+              ))}
+            </div>
+          )}
+          <button
+            onClick={() => {
+              setSelected(item);
+              setShowJson(false);
+            }}
+            className="mt-3 bg-blue-600 text-white rounded px-3 py-1"
+          >
+            Abrir
+          </button>
+        </div>
+      );
+    }
+    if (item.kind === "flashcards") {
+      const count = Array.isArray(item.payload) ? item.payload.length : 0;
+      return (
+        <div key={item.id} className="rounded-2xl shadow-md p-4 bg-white">
+          <div className="font-semibold">Flashcards</div>
+          <div className="text-sm mt-1">{count} cards</div>
+          <button
+            onClick={() => onStudy(item)}
+            className="mt-3 bg-green-600 text-white rounded px-3 py-1"
+          >
+            Estudar agora
+          </button>
+        </div>
+      );
+    }
+    if (item.kind === "quiz") {
+      const count = item.payload?.questions?.length || 0;
+      return (
+        <div key={item.id} className="rounded-2xl shadow-md p-4 bg-white">
+          <div className="font-semibold">Simulado</div>
+          <div className="text-sm mt-1">{count} questões</div>
+          <button
+            onClick={() => onPlay(item)}
+            className="mt-3 bg-indigo-600 text-white rounded px-3 py-1"
+          >
+            Jogar agora
+          </button>
+        </div>
+      );
+    }
+    if (item.kind === "professor") {
+      return (
+        <div key={item.id} className="rounded-2xl shadow-md p-4 bg-white">
+          <div className="font-semibold">{item.payload?.title || item.subject}</div>
+          <button
+            onClick={() => navigate(`/professor?history=${item.id}`)}
+            className="mt-3 bg-purple-600 text-white rounded px-3 py-1"
+          >
+            Ler explicação
+          </button>
+        </div>
+      );
+    }
+    if (item.kind === "psycho") {
+      return (
+        <div key={item.id} className="rounded-2xl shadow-md p-4 bg-white">
+          <div className="font-semibold">{item.payload?.summary || item.subject}</div>
+          <button
+            onClick={() => navigate(`/psycho?history=${item.id}`)}
+            className="mt-3 bg-teal-600 text-white rounded px-3 py-1"
+          >
+            Ver intervenções
+          </button>
+        </div>
+      );
+    }
+    return null;
+  }
+
+  return (
+    <main className="p-6 max-w-5xl mx-auto">
+      <h1 className="text-2xl font-bold mb-4">Histórico</h1>
+      <div className="flex flex-wrap gap-4 mb-4 items-end">
+        <div>
+          <label className="mr-2">Filtrar:</label>
+          <select
+            className="border rounded px-2 py-1"
+            value={kind}
+            onChange={(e) => setKind(e.target.value)}
+          >
+            <option value="">Todos</option>
+            <option value="plan">Plan</option>
+            <option value="flashcards">Flashcards</option>
+            <option value="quiz">Quiz</option>
+            <option value="professor">Professor</option>
+            <option value="psycho">Psycho</option>
+          </select>
+        </div>
+        <div>
+          <input
+            type="text"
+            placeholder="Buscar assunto"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="border rounded px-2 py-1"
+          />
+        </div>
       </div>
 
       {error && (
@@ -71,43 +175,42 @@ export default function HistoryPage() {
       {loading ? (
         <div>Carregando...</div>
       ) : (
-        <ul className="space-y-4">
-          {items.map((item) => (
-            <li key={item.id} className="border rounded p-4 bg-white">
-              <div className="flex justify-between items-center mb-2">
-                <div>
-                  <div className="font-semibold">{item.kind}</div>
-                  {item.subject && <div className="text-sm text-slate-600">{item.subject}</div>}
-                  <div className="text-xs text-slate-500">
-                    {new Date(item.created_at).toLocaleString()}
-                  </div>
-                </div>
-                {item.kind === "quiz" && (
-                  <button
-                    onClick={() => onPlay(item)}
-                    className="bg-blue-600 text-white rounded px-3 py-1"
-                  >
-                    Jogar
-                  </button>
-                )}
-                {item.kind === "flashcards" && (
-                  <button
-                    onClick={() => onStudy(item)}
-                    className="bg-green-600 text-white rounded px-3 py-1"
-                  >
-                    Estudar
-                  </button>
-                )}
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filtered.map((item) => renderCard(item))}
+          {filtered.length === 0 && <div>Nenhum registro.</div>}
+        </div>
+      )}
+
+      {selected && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-4 max-w-xl w-full max-h-full overflow-y-auto">
+            <div className="font-semibold mb-2">{selected.subject || selected.kind}</div>
+            {selected.kind === "plan" && (
+              <div className="text-sm mb-2">
+                {selected.payload?.exam_overview?.exam_name}
               </div>
-              {item.kind === "plan" && (
-                <pre className="bg-slate-100 p-2 rounded overflow-auto text-xs">
-{JSON.stringify(item.payload, null, 2)}
-                </pre>
-              )}
-            </li>
-          ))}
-          {items.length === 0 && <li>Nenhum registro.</li>}
-        </ul>
+            )}
+            <button
+              onClick={() => setShowJson((s) => !s)}
+              className="text-blue-600 text-sm underline"
+            >
+              {showJson ? "Ocultar JSON" : "Ver JSON"}
+            </button>
+            {showJson && (
+              <pre className="bg-slate-100 p-2 rounded mt-2 overflow-auto text-xs">
+                {JSON.stringify(selected.payload, null, 2)}
+              </pre>
+            )}
+            <div className="text-right mt-4">
+              <button
+                onClick={() => setSelected(null)}
+                className="bg-slate-600 text-white px-3 py-1 rounded"
+              >
+                Fechar
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </main>
   );

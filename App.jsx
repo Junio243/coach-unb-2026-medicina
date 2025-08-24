@@ -19,6 +19,8 @@ const Perfil = React.lazy(() => import('./pages/Perfil.jsx'));
 const History = React.lazy(() => import('./pages/History.jsx'));
 const QuizPlay = React.lazy(() => import('./pages/QuizPlay.jsx'));
 const Subjects = React.lazy(() => import('./pages/Subjects.jsx'));
+const Professor = React.lazy(() => import('./pages/Professor.jsx'));
+const Psycho = React.lazy(() => import('./pages/Psycho.jsx'));
 
 
 const App = () => {
@@ -66,6 +68,8 @@ const App = () => {
                                     <Route path="/exam-info" element={isOnboardingComplete ? <ExamInfo /> : <Navigate to="/onboarding" />} />
                                     <Route path="/history" element={isOnboardingComplete ? <History /> : <Navigate to="/onboarding" />} />
                                     <Route path="/subjects" element={isOnboardingComplete ? <Subjects /> : <Navigate to="/onboarding" />} />
+                                    <Route path="/professor" element={isOnboardingComplete ? <Professor /> : <Navigate to="/onboarding" />} />
+                                    <Route path="/psycho" element={isOnboardingComplete ? <Psycho /> : <Navigate to="/onboarding" />} />
                                     <Route path="/quiz/:id" element={isOnboardingComplete ? <QuizPlay /> : <Navigate to="/onboarding" />} />
                                     <Route path="/login" element={<LoginPage />} />
 <Route path="/perfil" element={<PerfilPage />} />
@@ -88,6 +92,8 @@ const Sidebar = () => {
         { href: '/simulados', label: 'Simulados', icon: <ClipboardCheckIcon /> },
         { href: '/flashcards', label: 'Flashcards', icon: <LayersIcon /> },
         { href: '/history', label: 'Histórico', icon: <ClockIcon /> },
+        { href: '/professor', label: 'Professor', icon: <SparklesIcon /> },
+        { href: '/psycho', label: 'Psicopedagogo', icon: <SparklesIcon /> },
         { href: '/subjects', label: 'Matérias', icon: <BookIcon /> },
         { href: '/exam-info', label: 'Sobre a Prova', icon: <InfoIcon /> },
         { href: '/perfil', label: 'Perfil', icon: <UserIcon /> },

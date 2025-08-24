@@ -284,6 +284,100 @@ Sem texto fora do JSON.`;
 }
 export const gerarSimulado = generateSimulado;
 
+/* =============== PROFESSOR EXPLAIN =============== */
+export async function professorExplain({ topic = "", subject = "", level = "iniciante", minutes = 30 } = {}) {
+  ensureKey();
+  const ai = new GoogleGenAI({ apiKey: API_KEY });
+
+  const prompt = `Você é um professor paciente. Explique o tópico "${topic}" de ${subject} para um aluno ${level} em cerca de ${minutes} minutos.
+Responda APENAS com JSON no formato:
+{
+  "title": "...",
+  "overview": "...",
+  "step_by_step": [ {"step":"...","detail":"..."} ],
+  "examples": [ {"input":"...","solution":"...","why":"..."} ],
+  "misconceptions": ["erro comum 1"],
+  "practice": [ {"task":"...","expected":"...","hint":"..."} ],
+  "reading_list": ["capítulo", "assunto"],
+  "video_queries": ["termo"],
+  "flashcards_seeds": ["termo"],
+  "quiz_seeds": ["assunto"]
+}`;
+
+  try {
+    const res = await retryable(() =>
+      ai.models.generateContent({
+        model: MODEL,
+        contents: prompt,
+        config: { responseMimeType: "application/json", temperature: 0.7 },
+      })
+    );
+
+    const txt = await readText(res);
+    const data = safeParseJSON(txt);
+
+    try {
+      await saveHistory({
+        kind: "professor",
+        subject: subject || topic,
+        params: { topic, subject, level, minutes },
+        payload: data,
+      });
+    } catch (e) {
+      console.error("[professorExplain] saveHistory erro:", e);
+    }
+
+    return data;
+  } catch (err) {
+    console.error("[professorExplain] erro:", err);
+    throw handleError(err, "Falha ao gerar explicação do professor.");
+  }
+}
+
+/* =============== PSICOPEDAGOGO =============== */
+export async function psychoPlan({ subject = "", difficulty_type = "", description = "", intensity = 3, available_minutes = 120 } = {}) {
+  ensureKey();
+  const ai = new GoogleGenAI({ apiKey: API_KEY });
+
+  const prompt = `Você é um psicopedagogo. O aluno relata dificuldade em ${subject} (${difficulty_type}: ${description}). Intensidade ${intensity} de 1-5 e tempo disponível ${available_minutes} minutos.
+Responda APENAS com JSON no formato:
+{
+  "summary": "...",
+  "interventions": [ {"name":"...","how":"...","when":"...","duration":"...","why":"..."} ],
+  "weekly_adjustments": [ {"day":"monday","change":"...","minutes":60} ],
+  "monitoring": ["sinal"]
+}`;
+
+  try {
+    const res = await retryable(() =>
+      ai.models.generateContent({
+        model: MODEL,
+        contents: prompt,
+        config: { responseMimeType: "application/json", temperature: 0.7 },
+      })
+    );
+
+    const txt = await readText(res);
+    const data = safeParseJSON(txt);
+
+    try {
+      await saveHistory({
+        kind: "psycho",
+        subject,
+        params: { subject, difficulty_type, description, intensity, available_minutes },
+        payload: data,
+      });
+    } catch (e) {
+      console.error("[psychoPlan] saveHistory erro:", e);
+    }
+
+    return data;
+  } catch (err) {
+    console.error("[psychoPlan] erro:", err);
+    throw handleError(err, "Falha ao gerar plano psicopedagógico.");
+  }
+}
+
 /* =============== Tutor (texto livre) =============== */
 export async function getTutorResponse(question) {
   ensureKey();
