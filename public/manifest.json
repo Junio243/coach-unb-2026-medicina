@@ -1,0 +1,15 @@
+{
+  "short_name": "Coach UnB",
+  "name": "Coach UnB 2026 Medicina",
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#1e293b",
+  "background_color": "#f8fafc",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    }
+  ]
+}
