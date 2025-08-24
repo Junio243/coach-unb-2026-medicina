@@ -3,7 +3,7 @@ import { GoogleGenAI } from "@google/genai";
 import { safeParseJSON } from "./safeParseJSON.js";
 
 const API_KEY = process.env.GEMINI_API_KEY || "";
-const MODEL   = "gemini-2.5-flash";
+const MODEL = "gemini-2.5-flash";
 
 function ensureKey() {
   if (!API_KEY) {
@@ -16,15 +16,35 @@ function ensureKey() {
 
 async function readText(res) {
   if (!res) return "";
-  // O SDK expõe .text como string (amostra oficial usa response.text)
   try {
     if (typeof res.text === "function") return await res.text();
-    if (typeof res.text === "string")   return res.text;
+    if (typeof res.text === "string") return res.text;
     if (res.response && typeof res.response.text === "function") {
       return await res.response.text();
     }
   } catch {}
   return "";
+}
+
+function handleError(err, defaultMsg) {
+  const status = err?.status || err?.response?.status;
+  if (status === 401 || status === 403) {
+    return new Error("Verifique chave/domínio no AI Studio.");
+  }
+  return new Error(defaultMsg);
+}
+
+async function retryable(fn, attempt = 1) {
+  try {
+    return await fn();
+  } catch (err) {
+    const status = err?.status || err?.response?.status;
+    if (attempt < 2 && (status === 429 || status >= 500)) {
+      await new Promise((r) => setTimeout(r, 500 * attempt));
+      return retryable(fn, attempt + 1);
+    }
+    throw err;
+  }
 }
 
 /* =============== PLANO SEMANAL =============== */
@@ -53,19 +73,20 @@ export async function generateStudyPlan(userCtx = {}) {
   const ai = new GoogleGenAI({ apiKey: API_KEY });
 
   try {
-    const res = await ai.models.generateContent({
-      model: MODEL,
-      contents: buildWeeklyPrompt(userCtx),
-      // força JSON puro (evita texto extra que quebra o parse)
-      config: { responseMimeType: "application/json", temperature: 0.7 }
-    });
+    const res = await retryable(() =>
+      ai.models.generateContent({
+        model: MODEL,
+        contents: buildWeeklyPrompt(userCtx),
+        config: { responseMimeType: "application/json", temperature: 0.7 },
+      })
+    );
 
     const txt = await readText(res);
     const data = safeParseJSON(txt);
     return data;
   } catch (err) {
     console.error("[generateStudyPlan] erro:", err);
-    throw new Error("Falha ao gerar o plano. Verifique chave/domínio no AI Studio.");
+    throw handleError(err, "Falha ao gerar o plano.");
   }
 }
 export const gerarPlanoSemanal = (ctx) => generateStudyPlan(ctx);
@@ -81,11 +102,13 @@ Cada item: { "id": "fc-1", "front": "pergunta/termo", "back": "resposta", "diffi
 Responda APENAS com um array JSON (sem texto fora do JSON).`;
 
   try {
-    const res = await ai.models.generateContent({
-      model: MODEL,
-      contents: prompt,
-      config: { responseMimeType: "application/json", temperature: 0.7 }
-    });
+    const res = await retryable(() =>
+      ai.models.generateContent({
+        model: MODEL,
+        contents: prompt,
+        config: { responseMimeType: "application/json", temperature: 0.7 },
+      })
+    );
 
     const txt = await readText(res);
     const data = safeParseJSON(txt);
@@ -93,7 +116,7 @@ Responda APENAS com um array JSON (sem texto fora do JSON).`;
     return data;
   } catch (err) {
     console.error("[generateFlashcards] erro:", err);
-    throw new Error("Falha ao gerar flashcards. Verifique chave/domínio no AI Studio.");
+    throw handleError(err, "Falha ao gerar flashcards.");
   }
 }
 export const gerarFlashcards = generateFlashcards;
@@ -120,11 +143,13 @@ Formato EXATO (JSON):
 Sem texto fora do JSON.`;
 
   try {
-    const res = await ai.models.generateContent({
-      model: MODEL,
-      contents: prompt,
-      config: { responseMimeType: "application/json", temperature: 0.7 }
-    });
+    const res = await retryable(() =>
+      ai.models.generateContent({
+        model: MODEL,
+        contents: prompt,
+        config: { responseMimeType: "application/json", temperature: 0.7 },
+      })
+    );
 
     const txt = await readText(res);
     const data = safeParseJSON(txt);
@@ -134,7 +159,7 @@ Sem texto fora do JSON.`;
     return data;
   } catch (err) {
     console.error("[generateSimulado] erro:", err);
-    throw new Error("Falha ao gerar simulado. Verifique chave/domínio no AI Studio.");
+    throw handleError(err, "Falha ao gerar simulado.");
   }
 }
 export const gerarSimulado = generateSimulado;
