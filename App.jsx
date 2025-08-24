@@ -60,8 +60,8 @@ const App = () => {
                                     <Route path="/simulados" element={isOnboardingComplete ? <Simulados /> : <Navigate to="/onboarding" />} />
                                     <Route path="/flashcards" element={isOnboardingComplete ? <Flashcards /> : <Navigate to="/onboarding" />} />
                                     <Route path="/exam-info" element={isOnboardingComplete ? <ExamInfo /> : <Navigate to="/onboarding" />} />
-                                    <Route path="/login" element={user ? <Navigate to="/perfil" /> : <Login />} />
-                                    <Route path="/perfil" element={user ? <Perfil /> : <Navigate to="/login" />} />
+                                    <Route path="/login" element={<LoginPage />} />
+<Route path="/perfil" element={<PerfilPage />} />
                                 </Routes>
                             </React.Suspense>
                         </main>
