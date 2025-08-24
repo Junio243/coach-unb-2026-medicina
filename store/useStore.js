@@ -1,6 +1,15 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 
+const storage =
+    typeof window !== 'undefined' && window.localStorage
+        ? window.localStorage
+        : {
+              getItem: () => null,
+              setItem: () => {},
+              removeItem: () => {},
+          };
+
 export const useStore = create(
     persist(
         (set) => ({
@@ -25,7 +34,7 @@ export const useStore = create(
         }),
         {
             name: 'coach-unb-storage',
-            storage: createJSONStorage(() => localStorage),
+            storage: createJSONStorage(() => storage),
         }
     )
 );
