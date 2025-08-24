@@ -7,6 +7,8 @@ import {
 import { listUserSubjects } from "../services/subjectsService.js";
 import { autoPrepareExam } from "../services/examProfileService.js";
 import { fetchNews } from "../services/newsService.js";
+import { fetchVideos } from "../services/videoService.js";
+import { useNavigate } from "react-router-dom";
 
 const DAYS = [
   "monday",
@@ -19,6 +21,7 @@ const DAYS = [
 ];
 
 export default function PlannerPage() {
+  const navigate = useNavigate();
   const [favorites, setFavorites] = useState([]);
   const [weaknesses, setWeaknesses] = useState("");
   const [dailyMinutes, setDailyMinutes] = useState(120);
@@ -37,6 +40,8 @@ export default function PlannerPage() {
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
   const [subjects, setSubjects] = useState([]);
+  const [videoItems, setVideoItems] = useState([]);
+  const [videoTopic, setVideoTopic] = useState("");
 
   useEffect(() => {
     listUserSubjects().then(setSubjects).catch(() => {});
@@ -147,6 +152,17 @@ export default function PlannerPage() {
       setError(e.message || "Falha ao gerar simulado.");
     } finally {
       setActionLoading(false);
+    }
+  }
+
+  async function onVideos(topic) {
+    try {
+      const vids = await fetchVideos({ queries: [topic] });
+      setVideoItems(vids);
+      setVideoTopic(topic);
+    } catch {
+      setVideoItems([]);
+      setVideoTopic("videos indisponíveis");
     }
   }
 
@@ -394,6 +410,22 @@ export default function PlannerPage() {
                         {b.task && (
                           <div className="mt-1 text-xs italic">Tarefa: {b.task}</div>
                         )}
+                        <div className="mt-2 flex flex-col gap-1 text-xs">
+                          <button
+                            onClick={() =>
+                              navigate(`/professor?subject=${encodeURIComponent(b.subject)}&topic=${encodeURIComponent(b.topic)}`)
+                            }
+                            className="text-blue-600 underline"
+                          >
+                            Pedir explicação do Professor
+                          </button>
+                          <button
+                            onClick={() => onVideos(b.topic)}
+                            className="text-purple-600 underline"
+                          >
+                            Vídeos sobre este tópico
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -425,7 +457,31 @@ export default function PlannerPage() {
             </section>
           </div>
         )}
-    </main>
+
+        {videoTopic && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl p-4 max-w-xl w-full max-h-full overflow-y-auto">
+              <h3 className="font-semibold mb-2">Vídeos - {videoTopic}</h3>
+              <div className="space-y-2">
+                {videoItems.length === 0 && (
+                  <div className="text-sm">{videoTopic === "videos indisponíveis" ? "vídeos indisponíveis" : "Nenhum vídeo."}</div>
+                )}
+                {videoItems.map((v, i) => (
+                  <a key={i} href={v.url} target="_blank" rel="noreferrer" className="block p-2 rounded border">
+                    <div className="font-medium text-sm">{v.title}</div>
+                    <div className="text-xs text-slate-600">{v.channel}</div>
+                  </a>
+                ))}
+              </div>
+              <div className="text-right mt-4">
+                <button onClick={() => setVideoTopic("")} className="bg-slate-600 text-white px-3 py-1 rounded">
+                  Fechar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
   );
 }
 

@@ -14,6 +14,7 @@ This repository contains everything you need to run the Coach UnB app locally or
   - `VITE_SUPABASE_URL`
   - `VITE_SUPABASE_ANON_KEY`
   - `VITE_NEWS_PROXY_URL` – URL do serviço de notícias (ver abaixo)
+  - `VITE_VIDEO_PROXY_URL` – URL do serviço de vídeos (ver abaixo)
 
 Configure-as em `.env.local` para desenvolvimento e em _Environment Variables_ no Render para produção.
 
@@ -43,3 +44,14 @@ Há uma micro-API Node em `/api/news-proxy` usada para buscar notícias recentes
 No Render, crie um novo **Web Service** apontando para essa pasta (`api/news-proxy`) com **Node 20** e defina a env `ALLOW_ORIGIN=https://coach-unb-2026-medicina.onrender.com`.
 
 Use a URL pública do serviço na variável `VITE_NEWS_PROXY_URL` do site principal.
+
+## Video proxy
+
+Há também uma micro-API em `/api/video-proxy` para buscar vídeos do YouTube.
+
+No Render, crie um **Web Service** apontando para essa pasta com Node 20 e defina as variáveis:
+
+- `YT_API_KEY` – chave da YouTube Data API
+- `ALLOW_ORIGIN=https://coach-unb-2026-medicina.onrender.com`
+
+No front, use a URL pública desse serviço em `VITE_VIDEO_PROXY_URL`.

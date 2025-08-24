@@ -33,3 +33,5 @@ export async function getHistoryById(id) {
   if (error) throw error;
   return data;
 }
+
+export const getHistoryItem = getHistoryById;
