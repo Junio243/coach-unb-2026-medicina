@@ -1,21 +1,32 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { HashRouter, Routes, Route, Navigate, NavLink, useLocation } from 'react-router-dom';
 import { useStore } from './store/useStore.js';
 import Header from './components/Header.jsx';
 import AccessibilityBar from './components/AccessibilityBar.jsx';
+import { supabase } from './services/supabaseClient.js';
 
-// Static imports to prevent runtime loading errors in a build-less environment
-import Onboarding from './pages/Onboarding.jsx';
-import Dashboard from './pages/Dashboard.jsx';
-import Planner from './pages/Planner.jsx';
-import Tutor from './pages/Tutor.jsx';
-import Simulados from './pages/Simulados.jsx';
-import Flashcards from './pages/Flashcards.jsx';
-import ExamInfo from './pages/ExamInfo.jsx';
+const Onboarding = React.lazy(() => import('./pages/Onboarding.jsx'));
+const Dashboard = React.lazy(() => import('./pages/Dashboard.jsx'));
+const Planner = React.lazy(() => import('./pages/Planner.jsx'));
+const Tutor = React.lazy(() => import('./pages/Tutor.jsx'));
+const Simulados = React.lazy(() => import('./pages/Simulados.jsx'));
+const Flashcards = React.lazy(() => import('./pages/Flashcards.jsx'));
+const ExamInfo = React.lazy(() => import('./pages/ExamInfo.jsx'));
+const Login = React.lazy(() => import('./pages/Login.jsx'));
+const Perfil = React.lazy(() => import('./pages/Perfil.jsx'));
 
 
 const App = () => {
     const { isOnboardingComplete, accessibility } = useStore();
+    const [user, setUser] = useState(null);
+
+    useEffect(() => {
+        supabase.auth.getSession().then(({ data }) => setUser(data.session?.user || null));
+        const { data: listener } = supabase.auth.onAuthStateChange((_e, session) => {
+            setUser(session?.user || null);
+        });
+        return () => listener.subscription.unsubscribe();
+    }, []);
     
     useEffect(() => {
         document.documentElement.classList.toggle('dark', accessibility.highContrast);
@@ -37,16 +48,20 @@ const App = () => {
                     <div className="flex-1 flex flex-col">
                          {isOnboardingComplete && <Header />}
                         <main className="flex-1 p-4 sm:p-6 lg:p-8 bg-slate-100 dark:bg-slate-800">
-                            <Routes>
-                                <Route path="/" element={isOnboardingComplete ? <Navigate to="/dashboard" /> : <Navigate to="/onboarding" />} />
-                                <Route path="/onboarding" element={<Onboarding />} />
-                                <Route path="/dashboard" element={isOnboardingComplete ? <Dashboard /> : <Navigate to="/onboarding" />} />
-                                <Route path="/planner" element={isOnboardingComplete ? <Planner /> : <Navigate to="/onboarding" />} />
-                                <Route path="/tutor" element={isOnboardingComplete ? <Tutor /> : <Navigate to="/onboarding" />} />
-                                <Route path="/simulados" element={isOnboardingComplete ? <Simulados /> : <Navigate to="/onboarding" />} />
-                                <Route path="/flashcards" element={isOnboardingComplete ? <Flashcards /> : <Navigate to="/onboarding" />} />
-                                <Route path="/exam-info" element={isOnboardingComplete ? <ExamInfo /> : <Navigate to="/onboarding" />} />
-                            </Routes>
+                            <React.Suspense fallback={<div className="p-6">Carregando...</div>}>
+                                <Routes>
+                                    <Route path="/" element={isOnboardingComplete ? <Navigate to="/dashboard" /> : <Navigate to="/onboarding" />} />
+                                    <Route path="/onboarding" element={<Onboarding />} />
+                                    <Route path="/dashboard" element={isOnboardingComplete ? <Dashboard /> : <Navigate to="/onboarding" />} />
+                                    <Route path="/planner" element={isOnboardingComplete ? <Planner /> : <Navigate to="/onboarding" />} />
+                                    <Route path="/tutor" element={isOnboardingComplete ? <Tutor /> : <Navigate to="/onboarding" />} />
+                                    <Route path="/simulados" element={isOnboardingComplete ? <Simulados /> : <Navigate to="/onboarding" />} />
+                                    <Route path="/flashcards" element={isOnboardingComplete ? <Flashcards /> : <Navigate to="/onboarding" />} />
+                                    <Route path="/exam-info" element={isOnboardingComplete ? <ExamInfo /> : <Navigate to="/onboarding" />} />
+                                    <Route path="/login" element={user ? <Navigate to="/perfil" /> : <Login />} />
+                                    <Route path="/perfil" element={user ? <Perfil /> : <Navigate to="/login" />} />
+                                </Routes>
+                            </React.Suspense>
                         </main>
                     </div>
                 </div>
@@ -64,6 +79,7 @@ const Sidebar = () => {
         { href: '/simulados', label: 'Simulados', icon: <ClipboardCheckIcon /> },
         { href: '/flashcards', label: 'Flashcards', icon: <LayersIcon /> },
         { href: '/exam-info', label: 'Sobre a Prova', icon: <InfoIcon /> },
+        { href: '/perfil', label: 'Perfil', icon: <UserIcon /> },
     ];
 
     const location = useLocation();
@@ -103,6 +119,7 @@ const SparklesIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-
 const ClipboardCheckIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>;
 const LayersIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>;
 const InfoIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>;
+const UserIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A13.937 13.937 0 0112 15c2.5 0 4.847.655 6.879 1.804M15 11a3 3 0 10-6 0 3 3 0 006 0z" /></svg>;
 
 
 export default App;

@@ -4,22 +4,49 @@
 
 # Run and deploy your AI Studio app
 
-This repository contains everything you need to run your app locally or deploy it as a static site.
+This repository contains everything you need to run the Coach UnB app locally or deploy it as a static site.
 
-## Run Locally
+## Ambiente
 
-**Prerequisites:** Node.js 20+
+- **Node**: 20.x
+- **Variáveis de ambiente**:
+  - `GEMINI_API_KEY` – Client Key do Google AI Studio
+  - `VITE_SUPABASE_URL`
+  - `VITE_SUPABASE_ANON_KEY`
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+Configure-as em `.env.local` para desenvolvimento e em _Environment Variables_ no Render para produção.
 
-## Deploy
+### Allowed Domains (Google AI Studio)
 
-1. Build the app for production:
-   `npm run build`
-2. Preview the production build locally:
-   `npm run preview`
-3. Deploy the contents of the `dist/` directory to your preferred hosting service.
+No [Google AI Studio](https://aistudio.google.com/app/apikey), crie uma Client Key e adicione o domínio do Render (sem barra final) em **Allowed Domains**. Use essa chave em `GEMINI_API_KEY`.
+
+## Rodar localmente
+
+1. Instale dependências: `npm install`
+2. Inicie o ambiente: `npm run dev`
+
+## Build e Deploy
+
+1. Gerar build: `npm run build`
+2. Pré-visualizar: `npm run preview`
+3. No Render, suba o conteúdo de `dist/` e, se precisar, use **Clear build cache & deploy**.
+
+## Supabase
+
+Crie a tabela `profiles`:
+
+```sql
+create table profiles (
+  user_id uuid references auth.users(id) primary key,
+  full_name text,
+  goal text
+);
+
+alter table profiles enable row level security;
+
+create policy "profiles_select_self" on profiles for select using (auth.uid() = user_id);
+create policy "profiles_insert_self" on profiles for insert with check (auth.uid() = user_id);
+create policy "profiles_update_self" on profiles for update using (auth.uid() = user_id);
+```
+
+Essas policies permitem que cada usuário veja e atualize apenas seus próprios dados.
