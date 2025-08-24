@@ -1,5 +1,6 @@
 // services/geminiService.js
 import { GoogleGenAI } from "@google/genai";
+import { safeParseJSON } from "./safeParseJSON.js";
 
 const API_KEY = process.env.GEMINI_API_KEY || "";
 const MODEL   = "gemini-2.5-flash";
@@ -24,14 +25,6 @@ async function readText(res) {
     }
   } catch {}
   return "";
-}
-
-function safeParseJSON(txt) {
-  try { return JSON.parse(txt); }
-  catch (e) {
-    console.error("[Gemini] JSON malformado:", txt);
-    throw new Error("Resposta inválida do modelo.");
-  }
 }
 
 /* =============== PLANO SEMANAL =============== */
