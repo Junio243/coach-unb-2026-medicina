@@ -1,0 +1,52 @@
+
+{
+  "vestibular": "UnB 2026",
+  "curso_foco": "Medicina",
+  "description": "Estrutura geral das provas do Vestibular da UnB, com base em editais anteriores. Sujeito a alterações.",
+  "provas": [
+    {
+      "id": "prova_1",
+      "nome": "Prova de Conhecimentos I",
+      "itens": 30,
+      "disciplinas": [
+        "Língua Espanhola, Francesa ou Inglesa"
+      ]
+    },
+    {
+      "id": "prova_2",
+      "nome": "Prova de Conhecimentos II",
+      "itens": 120,
+      "disciplinas": [
+        "Língua Portuguesa e Literaturas de Língua Portuguesa",
+        "Geografia e História",
+        "Artes (Cênicas, Visuais e Música)",
+        "Filosofia e Sociologia"
+      ]
+    },
+    {
+      "id": "prova_3",
+      "nome": "Prova de Conhecimentos III",
+      "itens": 150,
+      "disciplinas": [
+        "Biologia",
+        "Física",
+        "Química",
+        "Matemática"
+      ]
+    },
+    {
+      "id": "redacao",
+      "nome": "Prova de Redação em Língua Portuguesa",
+      "itens": 1,
+      "disciplinas": [
+        "Redação"
+      ]
+    }
+  ],
+  "pesos_medicina": {
+    "prova_1": 1,
+    "prova_2": 2,
+    "prova_3": 4,
+    "redacao": 2
+  }
+}
