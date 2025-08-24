@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 const url  = import.meta.env.VITE_SUPABASE_URL;
 const anon = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+// Query stub que nunca quebra a UI
 function makeQueryStub() {
   const err = new Error("Banco indisponível: Supabase não configurado.");
   const q = {
@@ -20,15 +21,16 @@ function makeQueryStub() {
   return q;
 }
 
+// Stub de auth compatível com o v2 (tem onAuthStateChange)
 function makeStub() {
   return {
     auth: {
       async getSession() { return { data: { session: null }, error: null }; },
       async getUser()    { return { data: { user: null },    error: null }; },
-      // Assina mudanças de auth (assinatura compatível com v2: (event, session))
-      onAuthStateChange(cb) {
+      onAuthStateChange(callback) {
         const subscription = { unsubscribe(){} };
-        try { if (typeof cb === "function") cb("INITIAL_SESSION", null); } catch {}
+        // chama callback uma vez para não quebrar fluxos
+        try { if (typeof callback === "function") callback("INITIAL_SESSION", null); } catch {}
         return { data: { subscription }, error: null };
       },
       async signInWithPassword() { throw new Error("Login indisponível: Supabase não configurado."); },
