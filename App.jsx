@@ -1,3 +1,5 @@
+import LoginPage from "./pages/Login.jsx";
+import PerfilPage from "./pages/Perfil.jsx";
 import React, { useEffect, useState } from 'react';
 import { HashRouter, Routes, Route, Navigate, NavLink, useLocation } from 'react-router-dom';
 import { useStore } from './store/useStore.js';
