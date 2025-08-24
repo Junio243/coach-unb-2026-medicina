@@ -1,27 +1,28 @@
-{
-  "name": "coach-unb-2026-medicina",
-  "private": true,
-  "version": "0.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "react": "18.3.1",
-    "react-dom": "18.3.1",
-    "react-router-dom": "6.24.1",
-    "@google/genai": "0.15.0",
-    "zustand": "^5.0.8",
-    "recharts": "2.12.7"
-  },
-  "devDependencies": {
-    "@types/node": "^22.14.0",
-    "typescript": "~5.8.2",
-    "vite": "^6.2.0"
-  },
-  "engines": {
-    "node": "20.x"
-  }
-}
+// vite.config.ts
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { defineConfig, loadEnv } from 'vite';
+
+// __dirname para ESM (porque "type": "module" no package.json)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+export default defineConfig(({ mode }) => {
+  // carrega variáveis no build (Render → Environment Variables)
+  const env = loadEnv(mode, process.cwd(), '');
+
+  return {
+    // Render serve na raiz do domínio
+    base: '/',
+    define: {
+      // ⚠️ Use a Client Key do Google AI Studio com Allowed Domains
+      'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
+      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
+    },
+    resolve: {
+      alias: {
+        '@': path.resolve(__dirname, '.'),
+      },
+    },
+  };
+});
