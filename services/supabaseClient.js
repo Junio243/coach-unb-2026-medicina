@@ -1,11 +1,11 @@
 // services/supabaseClient.js
-import { createClient } from "@supabase/supabase-js";
+const createClient = null; // biblioteca supabase não instalada neste ambiente
 
 const url = import.meta.env.VITE_SUPABASE_URL;
 const anon = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Se não tiver envs, exporta um stub inofensivo pra evitar tela branca.
-export const supabase = (url && anon)
+// Se não tiver envs ou lib, exporta um stub inofensivo pra evitar tela branca.
+export const supabase = (url && anon && createClient)
   ? createClient(url, anon, { auth: { persistSession: true, autoRefreshToken: true } })
   : {
       auth: {

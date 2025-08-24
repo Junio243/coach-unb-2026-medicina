@@ -2,6 +2,14 @@ import React, { useEffect, useState } from "react";
 import { listHistory } from "../services/historyService.js";
 import { createQuizFromPayload } from "../services/quizService.js";
 import { useNavigate } from "react-router-dom";
+import Spinner from "../components/Spinner.jsx";
+import Modal from "../components/Modal.jsx";
+import Badge from "../components/Badge.jsx";
+import PlanView from "../components/history/PlanView.jsx";
+import FlashcardsView from "../components/history/FlashcardsView.jsx";
+import QuizView from "../components/history/QuizView.jsx";
+import ProfessorView from "../components/history/ProfessorView.jsx";
+import PsychoView from "../components/history/PsychoView.jsx";
 
 export default function HistoryPage() {
   const [kind, setKind] = useState("");
@@ -10,7 +18,7 @@ export default function HistoryPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [selected, setSelected] = useState(null);
-  const [showJson, setShowJson] = useState(false);
+  const [visible, setVisible] = useState(9);
   const navigate = useNavigate();
 
   async function load() {
@@ -43,97 +51,32 @@ export default function HistoryPage() {
     }
   }
 
-  function onStudy(item) {
-    navigate(`/flashcards/${item.id}`);
-  }
-
   const filtered = items.filter((i) =>
     search ? (i.subject || "").toLowerCase().includes(search.toLowerCase()) : true
   );
 
   function renderCard(item) {
     const date = new Date(item.created_at).toLocaleDateString("pt-BR");
-    if (item.kind === "plan") {
-      const subs = item.payload?.exam_overview?.subjects || [];
-      return (
-        <div key={item.id} className="rounded-2xl shadow-md p-4 bg-white">
-          <div className="font-semibold">Plano salvo em {date}</div>
-          {subs.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-2 text-xs">
-              {subs.map((s, i) => (
-                <span key={i} className="bg-slate-200 px-2 py-0.5 rounded-full">{s}</span>
-              ))}
+    const title = item.payload?.title || item.subject || item.kind;
+    return (
+      <div key={item.id} className="rounded-2xl shadow-md p-4 bg-white flex flex-col justify-between">
+        <div>
+          <div className="flex justify-between items-start">
+            <div>
+              <div className="font-semibold">{title}</div>
+              <div className="text-xs text-slate-600">{date}</div>
             </div>
-          )}
-          <button
-            onClick={() => {
-              setSelected(item);
-              setShowJson(false);
-            }}
-            className="mt-3 bg-blue-600 text-white rounded px-3 py-1"
-          >
-            Abrir
-          </button>
+            <Badge>{item.kind}</Badge>
+          </div>
         </div>
-      );
-    }
-    if (item.kind === "flashcards") {
-      const count = Array.isArray(item.payload) ? item.payload.length : 0;
-      return (
-        <div key={item.id} className="rounded-2xl shadow-md p-4 bg-white">
-          <div className="font-semibold">Flashcards</div>
-          <div className="text-sm mt-1">{count} cards</div>
-          <button
-            onClick={() => onStudy(item)}
-            className="mt-3 bg-green-600 text-white rounded px-3 py-1"
-          >
-            Estudar agora
-          </button>
-        </div>
-      );
-    }
-    if (item.kind === "quiz") {
-      const count = item.payload?.questions?.length || 0;
-      return (
-        <div key={item.id} className="rounded-2xl shadow-md p-4 bg-white">
-          <div className="font-semibold">Simulado</div>
-          <div className="text-sm mt-1">{count} questões</div>
-          <button
-            onClick={() => onPlay(item)}
-            className="mt-3 bg-indigo-600 text-white rounded px-3 py-1"
-          >
-            Jogar agora
-          </button>
-        </div>
-      );
-    }
-    if (item.kind === "professor") {
-      return (
-        <div key={item.id} className="rounded-2xl shadow-md p-4 bg-white">
-          <div className="font-semibold">{item.payload?.title || item.subject}</div>
-          <button
-            onClick={() => navigate(`/professor?history=${item.id}`)}
-            className="mt-3 bg-purple-600 text-white rounded px-3 py-1"
-          >
-            Ler explicação
-          </button>
-        </div>
-      );
-    }
-    if (item.kind === "psycho") {
-      return (
-        <div key={item.id} className="rounded-2xl shadow-md p-4 bg-white">
-          <div className="font-semibold">{item.payload?.summary || item.subject}</div>
-          <button
-            onClick={() => navigate(`/psycho?history=${item.id}`)}
-            className="mt-3 bg-teal-600 text-white rounded px-3 py-1"
-          >
-            Ver intervenções
-          </button>
-        </div>
-      );
-    }
-    return null;
+        <button
+          onClick={() => setSelected(item)}
+          className="mt-3 bg-blue-600 text-white rounded px-3 py-1 self-start"
+        >
+          Abrir
+        </button>
+      </div>
+    );
   }
 
   return (
@@ -173,45 +116,39 @@ export default function HistoryPage() {
       )}
 
       {loading ? (
-        <div>Carregando...</div>
+        <Spinner label="Carregando" fullPage />
       ) : (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map((item) => renderCard(item))}
-          {filtered.length === 0 && <div>Nenhum registro.</div>}
-        </div>
-      )}
-
-      {selected && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl p-4 max-w-xl w-full max-h-full overflow-y-auto">
-            <div className="font-semibold mb-2">{selected.subject || selected.kind}</div>
-            {selected.kind === "plan" && (
-              <div className="text-sm mb-2">
-                {selected.payload?.exam_overview?.exam_name}
-              </div>
-            )}
-            <button
-              onClick={() => setShowJson((s) => !s)}
-              className="text-blue-600 text-sm underline"
-            >
-              {showJson ? "Ocultar JSON" : "Ver JSON"}
-            </button>
-            {showJson && (
-              <pre className="bg-slate-100 p-2 rounded mt-2 overflow-auto text-xs">
-                {JSON.stringify(selected.payload, null, 2)}
-              </pre>
-            )}
-            <div className="text-right mt-4">
+        <>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filtered.slice(0, visible).map((item) => renderCard(item))}
+            {filtered.length === 0 && <div>Nenhum registro.</div>}
+          </div>
+          {visible < filtered.length && (
+            <div className="mt-4 text-center">
               <button
-                onClick={() => setSelected(null)}
-                className="bg-slate-600 text-white px-3 py-1 rounded"
+                onClick={() => setVisible((v) => v + 9)}
+                className="px-4 py-2 bg-slate-200 rounded"
               >
-                Fechar
+                Carregar mais
               </button>
             </div>
-          </div>
-        </div>
+          )}
+        </>
       )}
+
+      <Modal
+        open={!!selected}
+        onClose={() => setSelected(null)}
+        title={selected?.subject || selected?.payload?.title}
+      >
+        {selected?.kind === 'plan' && <PlanView payload={selected.payload} />}
+        {selected?.kind === 'flashcards' && <FlashcardsView payload={selected.payload} />}
+        {selected?.kind === 'quiz' && (
+          <QuizView payload={selected.payload} onPlay={() => onPlay(selected)} />
+        )}
+        {selected?.kind === 'professor' && <ProfessorView payload={selected.payload} />}
+        {selected?.kind === 'psycho' && <PsychoView payload={selected.payload} />}
+      </Modal>
     </main>
   );
 }
