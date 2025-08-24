@@ -61,7 +61,7 @@ export default function FlashcardsPage() {
             onChange={(e) => setNivel(e.target.value)}
           >
             <option value="iniciante">iniciante</option>
-            <option value="intermediario">intermediario</option>
+            <option value="intermediario">intermediário</option>
             <option value="avancado">avancado</option>
           </select>
         </label>
