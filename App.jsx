@@ -30,7 +30,17 @@ const App = () => {
     const [user, setUser] = useState(null);
 
     useEffect(() => {
-        supabase.auth.getSession().then(({ data }) => setUser(data.session?.user || null));
+       // depois (seguro)
+if (supabase?.auth?.onAuthStateChange) {
+  supabase.auth.onAuthStateChange((_event, session) => {
+    try { setUser(session?.user ?? null); } catch {}
+  });
+} else {
+  // fallback para ambientes sem Supabase
+  supabase.auth.getUser?.().then(({ data }) => {
+    try { setUser(data?.user ?? null); } catch {}
+  });
+}
         const { data: listener } = supabase.auth.onAuthStateChange((_e, session) => {
             setUser(session?.user || null);
         });
