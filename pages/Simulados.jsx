@@ -1,5 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { generateSimulado } from "../services/geminiService.js";
+import { saveHistory } from "../services/historyService.js";
+import { createQuizFromPayload } from "../services/quizService.js";
+import { listUserSubjects } from "../services/subjectsService.js";
+import { useNavigate } from "react-router-dom";
 
 export default function SimuladosPage() {
   const [materia, setMateria] = useState("Fisiologia");
@@ -9,10 +13,18 @@ export default function SimuladosPage() {
   const [loading, setLoading] = useState(false);
   const [quiz, setQuiz] = useState({ questions: [] });
   const [error, setError] = useState("");
+  const [info, setInfo] = useState("");
+  const [subjects, setSubjects] = useState([]);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    listUserSubjects().then(setSubjects).catch(() => {});
+  }, []);
 
   async function onGerar() {
     try {
       setError("");
+      setInfo("");
       setLoading(true);
       const data = await generateSimulado({
         subject: materia,
@@ -20,10 +32,34 @@ export default function SimuladosPage() {
         level: nivel,
       });
       setQuiz(data); // { questions: [...] }
+      try {
+        await saveHistory({
+          kind: "quiz",
+          subject: materia,
+          params: { count: Number(qtd) || 10, level: nivel },
+          payload: data,
+        });
+        setInfo("Salvo no histórico.");
+      } catch (err) {
+        setInfo(err.message);
+      }
     } catch (e) {
       setError(e.message || "Falha ao gerar simulado.");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function onPlayNow() {
+    try {
+      const q = await createQuizFromPayload({
+        subject: materia,
+        meta: { count: Number(qtd) || 10, level: nivel },
+        questions: quiz.questions,
+      });
+      navigate(`/quiz/${q.id}`);
+    } catch (e) {
+      setError(e.message);
     }
   }
 
@@ -41,6 +77,21 @@ export default function SimuladosPage() {
             placeholder="Ex.: Fisiologia"
           />
         </label>
+        {subjects.length > 0 && (
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="text-sm">Minhas matérias:</span>
+            {subjects.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => setMateria(s.subject)}
+                className="px-2 py-1 bg-slate-200 rounded text-sm"
+              >
+                {s.subject}
+              </button>
+            ))}
+          </div>
+        )}
 
         <label className="grid gap-1">
           <span>Quantidade de questões</span>
@@ -80,6 +131,22 @@ export default function SimuladosPage() {
           {error}
         </div>
       )}
+      {info && (
+        <div className="bg-yellow-100 text-yellow-800 border border-yellow-300 rounded p-3 mb-4">
+          {info}
+        </div>
+      )}
+
+      {quiz.questions?.length > 0 && (
+        <div className="mb-4">
+          <button
+            onClick={onPlayNow}
+            className="bg-green-600 text-white rounded px-4 py-2"
+          >
+            Jogar agora
+          </button>
+        </div>
+      )}
 
       <div className="grid gap-4">
         {quiz.questions?.map((q) => (
@@ -87,11 +154,7 @@ export default function SimuladosPage() {
             <div className="font-semibold mb-2">{q.statement}</div>
             <ol className="list-decimal pl-5 space-y-1">
               {q.options?.map((opt, i) => (
-                <li key={i}>
-                  {opt}
-                  {/* Para marcar a correta, descomente: */}
-                  {/* {i === q.correctIndex ? " ✅" : ""} */}
-                </li>
+                <li key={i}>{opt}</li>
               ))}
             </ol>
             {q.explanation && (

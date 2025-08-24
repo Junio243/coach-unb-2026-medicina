@@ -33,20 +33,4 @@ No [Google AI Studio](https://aistudio.google.com/app/apikey), crie uma Client K
 
 ## Supabase
 
-Crie a tabela `profiles`:
-
-```sql
-create table profiles (
-  user_id uuid references auth.users(id) primary key,
-  full_name text,
-  goal text
-);
-
-alter table profiles enable row level security;
-
-create policy "profiles_select_self" on profiles for select using (auth.uid() = user_id);
-create policy "profiles_insert_self" on profiles for insert with check (auth.uid() = user_id);
-create policy "profiles_update_self" on profiles for update using (auth.uid() = user_id);
-```
-
-Essas policies permitem que cada usuário veja e atualize apenas seus próprios dados.
+Execute o script `supabase.sql` para criar as tabelas de histórico, quizzes e matérias favoritas com as políticas de RLS necessárias.
