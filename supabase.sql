@@ -64,3 +64,32 @@ create policy "us_insert_own" on public.user_subjects
 for insert with check (auth.uid() = user_id);
 create policy "us_delete_own" on public.user_subjects
 for delete using (auth.uid() = user_id);
+
+-- PERFIL DO EXAME
+create table if not exists public.exam_profiles (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  target_exam text,
+  university text,
+  location text,
+  profile_json jsonb not null,
+  updated_at timestamptz default now(),
+  primary key (user_id, target_exam)
+);
+alter table public.exam_profiles enable row level security;
+
+drop policy if exists exam_profiles_select_own on public.exam_profiles;
+create policy exam_profiles_select_own
+on public.exam_profiles
+for select using (auth.uid() = user_id);
+
+drop policy if exists exam_profiles_upsert_own on public.exam_profiles;
+create policy exam_profiles_upsert_own
+on public.exam_profiles
+for insert with check (auth.uid() = user_id);
+
+drop policy if exists exam_profiles_update_own on public.exam_profiles;
+create policy exam_profiles_update_own
+on public.exam_profiles
+for update using (auth.uid() = user_id);
+
+select pg_notify('pgrst','reload schema');
