@@ -1,5 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import { generateFlashcards } from "../services/geminiService.js";
+import { saveHistory, getHistoryById } from "../services/historyService.js";
+import { listUserSubjects } from "../services/subjectsService.js";
 
 export default function FlashcardsPage() {
   const [assunto, setAssunto] = useState("Biologia celular");
@@ -9,10 +12,36 @@ export default function FlashcardsPage() {
   const [loading, setLoading] = useState(false);
   const [cards, setCards] = useState([]);
   const [error, setError] = useState("");
+  const [info, setInfo] = useState("");
+  const [subjects, setSubjects] = useState([]);
+  const { historyId } = useParams();
+  const [studyIndex, setStudyIndex] = useState(0);
+  const [showBack, setShowBack] = useState(false);
+
+  useEffect(() => {
+    listUserSubjects().then(setSubjects).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    async function loadFromHistory() {
+      if (!historyId) return;
+      try {
+        setLoading(true);
+        const h = await getHistoryById(historyId);
+        setCards(h.payload || []);
+      } catch (e) {
+        setError(e.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadFromHistory();
+  }, [historyId]);
 
   async function onGerar() {
     try {
       setError("");
+      setInfo("");
       setLoading(true);
       const data = await generateFlashcards({
         subject: assunto,
@@ -20,11 +49,57 @@ export default function FlashcardsPage() {
         level: nivel,
       });
       setCards(data);
+      try {
+        await saveHistory({
+          kind: "flashcards",
+          subject: assunto,
+          params: { count: Number(qtd) || 10, level: nivel },
+          payload: data,
+        });
+        setInfo("Salvo no histórico.");
+      } catch (err) {
+        setInfo(err.message);
+      }
     } catch (e) {
       setError(e.message || "Falha ao gerar flashcards.");
     } finally {
       setLoading(false);
     }
+  }
+
+  function nextCard() {
+    setStudyIndex((i) => (i + 1) % cards.length);
+    setShowBack(false);
+  }
+
+  if (historyId) {
+    return (
+      <main className="p-6 max-w-md mx-auto">
+        <h1 className="text-2xl font-bold mb-4">Flashcards</h1>
+        {loading && <div>Carregando...</div>}
+        {error && (
+          <div className="bg-red-100 text-red-800 border border-red-300 rounded p-3 mb-4">
+            {error}
+          </div>
+        )}
+        {cards.length > 0 && (
+          <div className="text-center">
+            <div
+              className="border rounded p-6 mb-4 bg-white cursor-pointer"
+              onClick={() => setShowBack(!showBack)}
+            >
+              {showBack ? cards[studyIndex].back : cards[studyIndex].front}
+            </div>
+            <button
+              onClick={nextCard}
+              className="bg-blue-600 text-white rounded px-4 py-2"
+            >
+              Próximo
+            </button>
+          </div>
+        )}
+      </main>
+    );
   }
 
   return (
@@ -41,6 +116,21 @@ export default function FlashcardsPage() {
             placeholder="Ex.: Citologia"
           />
         </label>
+        {subjects.length > 0 && (
+          <div className="flex flex-wrap gap-2 items-center">
+            <span className="text-sm">Minhas matérias:</span>
+            {subjects.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => setAssunto(s.subject)}
+                className="px-2 py-1 bg-slate-200 rounded text-sm"
+              >
+                {s.subject}
+              </button>
+            ))}
+          </div>
+        )}
 
         <label className="grid gap-1">
           <span>Quantidade</span>
@@ -78,6 +168,11 @@ export default function FlashcardsPage() {
       {error && (
         <div className="bg-red-100 text-red-800 border border-red-300 rounded p-3 mb-4">
           {error}
+        </div>
+      )}
+      {info && (
+        <div className="bg-yellow-100 text-yellow-800 border border-yellow-300 rounded p-3 mb-4">
+          {info}
         </div>
       )}
 
