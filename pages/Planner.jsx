@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { generateStudyPlan } from '../services/geminiService.js';
+import { generateStudyPlan } from "../services/geminiService.js";
 import Button from '../components/ui/Button.jsx';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/Card.jsx';
 
