@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { listUserSubjects, addUserSubject, removeUserSubject } from "../services/subjectsService.js";
 import defaultSubjects from "../data/subjects.json";
 
@@ -53,9 +54,14 @@ export default function SubjectsPage() {
           Nossa plataforma indica a teoria essencial e oferece questões no modelo Cebraspe,
           minissimulados por matéria, testes práticos comentados e exercícios de aprofundamento.
         </p>
-        <ul className="list-disc pl-5">
+        <ul className="space-y-4">
           {defaultSubjects.map((s) => (
-            <li key={s}>{s}</li>
+            <li key={s.id}>
+              <Link to={`/subjects/${s.id}`} className="block p-4 border rounded-lg bg-white dark:bg-slate-800 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100">{s.name}</h3>
+                <p className="text-slate-600 dark:text-slate-300 mt-1">{s.description}</p>
+              </Link>
+            </li>
           ))}
         </ul>
       </section>
