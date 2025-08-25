@@ -24,3 +24,15 @@ test('parses first JSON when multiple objects are present', () => {
   const result = safeParseJSON(mixedJson);
   assert.deepEqual(result, { a: 1 });
 });
+
+test('parses JSON arrays', () => {
+  const jsonArray = '[1,2,3]';
+  const result = safeParseJSON(jsonArray);
+  assert.deepEqual(result, [1, 2, 3]);
+});
+
+test('returns input unchanged when not a string', () => {
+  const obj = { foo: 1 };
+  const result = safeParseJSON(obj);
+  assert.equal(result, obj);
+});
