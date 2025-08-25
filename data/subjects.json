@@ -2,56 +2,71 @@
   {
     "id": "historia",
     "name": "História",
-    "description": "Estudo dos eventos passados, abrangendo desde a antiguidade até os tempos contemporâneos, com foco nos contextos social, cultural e político."
+    "description": "Estudo dos eventos passados, abrangendo desde a antiguidade até os tempos contemporâneos, com foco nos contextos social, cultural e político.",
+    "topics": []
   },
   {
     "id": "geografia",
     "name": "Geografia",
-    "description": "Análise do espaço geográfico, relevo, clima, população e as relações entre o meio ambiente e a sociedade."
+    "description": "Análise do espaço geográfico, relevo, clima, população e as relações entre o meio ambiente e a sociedade.",
+    "topics": []
   },
   {
     "id": "sociologia",
     "name": "Sociologia",
-    "description": "Ciência que estuda as relações sociais, as formas de associação e as estruturas que regem a vida em sociedade."
+    "description": "Ciência que estuda as relações sociais, as formas de associação e as estruturas que regem a vida em sociedade.",
+    "topics": []
   },
   {
     "id": "filosofia",
     "name": "Filosofia",
-    "description": "Investigação de questões fundamentais sobre existência, conhecimento, valores, razão, mente e linguagem."
+    "description": "Investigação de questões fundamentais sobre existência, conhecimento, valores, razão, mente e linguagem.",
+    "topics": []
   },
   {
     "id": "literatura",
     "name": "Literatura",
-    "description": "Análise de obras literárias, movimentos, autores e estilos de época da língua portuguesa e da literatura brasileira."
+    "description": "Análise de obras literárias, movimentos, autores e estilos de época da língua portuguesa e da literatura brasileira.",
+    "topics": []
   },
   {
     "id": "interpretacao-de-texto",
     "name": "Interpretação de Texto",
-    "description": "Desenvolvimento de habilidades para a compreensão e análise crítica de diferentes gêneros textuais."
+    "description": "Desenvolvimento de habilidades para a compreensão e análise crítica de diferentes gêneros textuais.",
+    "topics": []
   },
   {
     "id": "gramatica",
     "name": "Gramática",
-    "description": "Estudo das regras que regem o uso da língua portuguesa, incluindo morfologia, sintaxe e semântica."
+    "description": "Estudo das regras que regem o uso da língua portuguesa, incluindo morfologia, sintaxe e semântica.",
+    "topics": []
   },
   {
     "id": "fisica",
     "name": "Física",
-    "description": "Ciência que estuda a natureza e seus fenômenos, como movimento, energia, matéria, calor, som, luz e eletricidade."
+    "description": "Ciência que estuda a natureza e seus fenômenos, como movimento, energia, matéria, calor, som, luz e eletricidade.",
+    "topics": []
   },
   {
     "id": "quimica",
     "name": "Química",
-    "description": "Estudo da matéria, suas propriedades, transformações e a energia envolvida nesses processos."
+    "description": "Estudo da matéria, suas propriedades, transformações e a energia envolvida nesses processos.",
+    "topics": []
   },
   {
     "id": "matematica",
     "name": "Matemática",
-    "description": "Exploração de conceitos de lógica, números, geometria, álgebra e suas aplicações em diversas áreas do conhecimento."
+    "description": "Exploração de conceitos de lógica, números, geometria, álgebra e suas aplicações em diversas áreas do conhecimento.",
+    "topics": [
+      { "id": "funcoes", "name": "Funções de 1º e 2º grau" },
+      { "id": "trigonometria", "name": "Trigonometria" },
+      { "id": "geometria-plana", "name": "Geometria Plana" }
+    ]
   },
   {
     "id": "biologia",
     "name": "Biologia",
-    "description": "Ciência que estuda os seres vivos, sua origem, evolução, estrutura, funcionamento e relação com o meio ambiente."
+    "description": "Ciência que estuda os seres vivos, sua origem, evolução, estrutura, funcionamento e relação com o meio ambiente.",
+    "topics": []
   }
 ]

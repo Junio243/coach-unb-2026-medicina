@@ -1,0 +1,47 @@
+[
+  {
+    "id": "q1",
+    "topicId": "funcoes",
+    "year": 2023,
+    "difficulty": "fácil",
+    "statement": "Qual a raiz da função f(x) = 2x - 4?",
+    "options": [
+      { "id": "a", "text": "x = 1" },
+      { "id": "b", "text": "x = 2" },
+      { "id": "c", "text": "x = 3" },
+      { "id": "d", "text": "x = 4" }
+    ],
+    "answer": "b",
+    "comment": "Para encontrar a raiz, igualamos f(x) a zero: 2x - 4 = 0. Adicionando 4 a ambos os lados, temos 2x = 4. Dividindo por 2, encontramos x = 2."
+  },
+  {
+    "id": "q2",
+    "topicId": "funcoes",
+    "year": 2022,
+    "difficulty": "média",
+    "statement": "Qual o vértice da parábola da função f(x) = x² - 4x + 3?",
+    "options": [
+      { "id": "a", "text": "V = (2, -1)" },
+      { "id": "b", "text": "V = (-2, 1)" },
+      { "id": "c", "text": "V = (1, -2)" },
+      { "id": "d", "text": "V = (4, 3)" }
+    ],
+    "answer": "a",
+    "comment": "As coordenadas do vértice são dadas por Xv = -b/2a e Yv = -Δ/4a. Temos a=1, b=-4, c=3. Xv = -(-4)/(2*1) = 2. Δ = b² - 4ac = (-4)² - 4*1*3 = 16 - 12 = 4. Yv = -4/(4*1) = -1. Portanto, o vértice é V = (2, -1)."
+  },
+  {
+    "id": "q3",
+    "topicId": "trigonometria",
+    "year": 2023,
+    "difficulty": "fácil",
+    "statement": "Qual o valor de sen(30°)?",
+    "options": [
+      { "id": "a", "text": "1/2" },
+      { "id": "b", "text": "sqrt(3)/2" },
+      { "id": "c", "text": "sqrt(2)/2" },
+      { "id": "d", "text": "1" }
+    ],
+    "answer": "a",
+    "comment": "O seno de 30 graus é um valor notável da trigonometria e corresponde a 1/2."
+  }
+]
