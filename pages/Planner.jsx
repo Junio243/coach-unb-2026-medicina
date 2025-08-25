@@ -9,6 +9,7 @@ import { autoPrepareExam } from "../services/examProfileService.js";
 import { fetchNews } from "../services/newsService.js";
 import { fetchVideos } from "../services/videoService.js";
 import { useNavigate } from "react-router-dom";
+import Spinner from "../components/Spinner.jsx";
 
 const DAYS = [
   "monday",
@@ -178,6 +179,9 @@ export default function PlannerPage() {
 
   return (
     <main className="p-4 md:p-6 max-w-7xl mx-auto">
+      {loading && (
+        <Spinner fullPage label="Gerando seu plano (30-60s)..." />
+      )}
       <h1 className="text-2xl font-bold mb-4">Planner</h1>
 
       <div className="grid gap-2 sm:grid-cols-4 mb-6">

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { professorExplain } from "../services/geminiService.js";
 import { getHistoryItem } from "../services/historyService.js";
 import { listUserSubjects } from "../services/subjectsService.js";
@@ -9,6 +9,7 @@ import ReactMarkdown from "react-markdown";
 export default function ProfessorPage() {
   const [params] = useSearchParams();
   const historyId = params.get("history");
+  const navigate = useNavigate();
   const [topic, setTopic] = useState("");
   const [subject, setSubject] = useState("");
   const [subjects, setSubjects] = useState([]);
@@ -102,7 +103,6 @@ export default function ProfessorPage() {
               className="border rounded px-2 py-1 w-full"
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
-              required
             />
           </div>
           <div className="flex gap-2">
@@ -138,7 +138,9 @@ export default function ProfessorPage() {
         </form>
       )}
 
-      {loading && <Spinner fullPage label="Gerando" />}
+      {loading && (
+        <Spinner fullPage label="Gerando sua aula (30-60s)..." />
+      )}
 
       {data && !loading && (
         <section className="space-y-6">
@@ -189,6 +191,28 @@ export default function ProfessorPage() {
               </div>
             </div>
           )}
+          <div className="flex flex-col sm:flex-row gap-2 mt-4">
+            <button
+              onClick={() =>
+                navigate(
+                  `/flashcards?subject=${encodeURIComponent(subject || topic)}`
+                )
+              }
+              className="bg-green-600 text-white rounded px-4 py-2"
+            >
+              Gerar flashcards do que aprendi
+            </button>
+            <button
+              onClick={() =>
+                navigate(
+                  `/simulados?subject=${encodeURIComponent(subject || topic)}&count=5`
+                )
+              }
+              className="bg-purple-600 text-white rounded px-4 py-2"
+            >
+              Criar simulado rápido
+            </button>
+          </div>
         </section>
       )}
     </main>

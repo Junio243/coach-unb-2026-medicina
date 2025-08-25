@@ -309,18 +309,29 @@ Retorne APENAS JSON válido no formato:
   ]
 }
 Use Markdown simples nas strings de "content" e simule links com "https://..." quando necessário.`;
-
   try {
-    const res = await retryable(() =>
-      ai.models.generateContent({
-        model: MODEL,
-        contents: prompt,
-        config: { responseMimeType: "application/json", temperature: 0.7 },
-      })
-    );
+    async function request(extra = "") {
+      const res = await retryable(() =>
+        ai.models.generateContent({
+          model: MODEL,
+          contents: prompt + extra,
+          config: { responseMimeType: "application/json", temperature: 0.7 },
+        })
+      );
+      const txt = await readText(res);
+      return safeParseJSON(txt);
+    }
 
-    const txt = await readText(res);
-    const data = safeParseJSON(txt);
+    let data;
+    try {
+      data = await request();
+    } catch (e) {
+      if (e.message && e.message.includes("Resposta inválida")) {
+        data = await request("\nResponda apenas com JSON válido.");
+      } else {
+        throw e;
+      }
+    }
 
     try {
       await saveHistory({
