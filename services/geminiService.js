@@ -289,20 +289,26 @@ export async function professorExplain({ topic = "", subject = "", level = "inic
   ensureKey();
   const ai = new GoogleGenAI({ apiKey: API_KEY });
 
-  const prompt = `Você é um professor paciente. Explique o tópico "${topic}" de ${subject} para um aluno ${level} em cerca de ${minutes} minutos.
-Responda APENAS com JSON no formato:
+  const prompt = `Você é um professor particular paciente. Gere uma aula sobre "${topic}" de ${subject} para um aluno ${level} com duração aproximada de ${minutes} minutos.
+Retorne APENAS JSON válido no formato:
 {
-  "title": "...",
-  "overview": "...",
-  "step_by_step": [ {"step":"...","detail":"..."} ],
-  "examples": [ {"input":"...","solution":"...","why":"..."} ],
-  "misconceptions": ["erro comum 1"],
-  "practice": [ {"task":"...","expected":"...","hint":"..."} ],
-  "reading_list": ["capítulo", "assunto"],
-  "video_queries": ["termo"],
-  "flashcards_seeds": ["termo"],
-  "quiz_seeds": ["assunto"]
-}`;
+  "title": "Título da Aula",
+  "intro": "Breve introdução acolhedora",
+  "sections": [
+    {
+      "heading": "Tópico 1",
+      "content": "Explicação clara e resumida em Markdown",
+      "examples": ["Exemplo 1", "Exemplo 2"],
+      "exercise": "Pequeno exercício prático"
+    }
+  ],
+  "conclusion": "Resumo do que foi aprendido",
+  "recommendations": [
+    { "type": "video", "title": "Aula relacionada", "url": "https://..." },
+    { "type": "article", "title": "Leitura sugerida", "url": "https://..." }
+  ]
+}
+Use Markdown simples nas strings de "content" e simule links com "https://..." quando necessário.`;
 
   try {
     const res = await retryable(() =>

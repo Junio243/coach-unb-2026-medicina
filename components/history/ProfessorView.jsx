@@ -1,63 +1,55 @@
 import React from 'react';
+import ReactMarkdown from 'react-markdown';
 
 export default function ProfessorView({ payload }) {
   if (!payload) return null;
   return (
     <div className="space-y-4 text-sm">
-      <div>
-        <h3 className="text-lg font-semibold mb-1">{payload.title}</h3>
-        <p>{payload.overview}</p>
-      </div>
-      {payload.step_by_step && (
+      <h3 className="text-lg font-semibold">{payload.title}</h3>
+      {payload.intro && <ReactMarkdown>{payload.intro}</ReactMarkdown>}
+      {Array.isArray(payload.sections) &&
+        payload.sections.map((sec, idx) => (
+          <div key={idx} className="space-y-1">
+            <h4 className="font-semibold">{sec.heading}</h4>
+            <ReactMarkdown>{sec.content}</ReactMarkdown>
+            {sec.examples && sec.examples.length > 0 && (
+              <ul className="list-disc list-inside">
+                {sec.examples.map((ex, i) => (
+                  <li key={i}>
+                    <ReactMarkdown className="inline">{ex}</ReactMarkdown>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {sec.exercise && (
+              <div className="border-l-4 border-blue-500 bg-blue-50 p-2 rounded">
+                <ReactMarkdown>{sec.exercise}</ReactMarkdown>
+              </div>
+            )}
+          </div>
+        ))}
+      {payload.conclusion && (
         <div>
-          <h4 className="font-semibold mb-1">Passo a passo</h4>
-          <ol className="list-decimal list-inside space-y-1">
-            {payload.step_by_step.map((s, i) => (
-              <li key={i}>{s.step}: {s.detail}</li>
-            ))}
-          </ol>
+          <h4 className="font-semibold">Conclusão</h4>
+          <ReactMarkdown>{payload.conclusion}</ReactMarkdown>
         </div>
       )}
-      {payload.examples && (
+      {payload.recommendations && payload.recommendations.length > 0 && (
         <div>
-          <h4 className="font-semibold mb-1">Exemplos</h4>
-          <ul className="space-y-2">
-            {payload.examples.map((ex, i) => (
-              <li key={i} className="p-2 bg-slate-100 rounded">
-                <div className="font-medium">{ex.input}</div>
-                <div>{ex.solution}</div>
-                <div className="text-xs text-slate-600">{ex.why}</div>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-      {payload.misconceptions && (
-        <div>
-          <h4 className="font-semibold mb-1">Erros comuns</h4>
-          <ul className="list-disc list-inside">
-            {payload.misconceptions.map((m, i) => (
-              <li key={i}>{m}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-      {payload.practice && (
-        <div>
-          <h4 className="font-semibold mb-1">Mini-prática</h4>
+          <h4 className="font-semibold mb-1">Recomendações</h4>
           <ul className="space-y-1">
-            {payload.practice.map((p, i) => (
-              <li key={i}>{p.task}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-      {payload.reading_list && (
-        <div>
-          <h4 className="font-semibold mb-1">Leituras</h4>
-          <ul className="list-disc list-inside">
-            {payload.reading_list.map((r, i) => (
-              <li key={i}>{r}</li>
+            {payload.recommendations.map((rec, i) => (
+              <li key={i}>
+                <a
+                  href={rec.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-blue-600 underline"
+                >
+                  {rec.title}
+                </a>
+                <span className="text-xs text-slate-600 ml-1">({rec.type})</span>
+              </li>
             ))}
           </ul>
         </div>
