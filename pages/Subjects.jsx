@@ -96,17 +96,18 @@ export default function SubjectsPage() {
       ) : (
         <ul className="space-y-2">
           {subjects.map((s) => (
-            <li key={s.id} className="border rounded px-3 py-2 flex justify-between items-center bg-white">
-              <span>{s.subject}</span>
+            <li key={s.id} className="p-4 border rounded-lg bg-white dark:bg-slate-800 shadow-sm flex justify-between items-center">
+              <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100">{s.name}</h3>
               <button
                 onClick={() => onRemove(s.id)}
-                className="text-red-600"
+                className="text-red-600 hover:text-red-800 dark:hover:text-red-400"
+                aria-label={`Remover ${s.name}`}
               >
                 Excluir
               </button>
             </li>
           ))}
-          {subjects.length === 0 && <li>Nenhuma matéria salva.</li>}
+          {subjects.length === 0 && <li className="text-slate-500 dark:text-slate-400">Nenhuma matéria salva.</li>}
         </ul>
       )}
       </section>
