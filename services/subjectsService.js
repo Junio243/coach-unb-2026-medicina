@@ -8,7 +8,13 @@ export async function listUserSubjects() {
     .select("*")
     .order("created_at", { ascending: true });
   if (error) throw error;
-  return data || [];
+
+  // Renomeia 'subject' para 'name' para consistência no frontend
+  const normalizedData = (data || []).map(({ subject, ...rest }) => ({
+    ...rest,
+    name: subject,
+  }));
+  return normalizedData;
 }
 
 export async function addUserSubject(name) {
