@@ -1,33 +1,18 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Coach UnB 2026 Medicina</title>
-
-  <!-- Fonte -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
-
-  <!-- Manifest/PWA -->
-  <link rel="manifest" href="/manifest.json" />
-  <meta name="theme-color" content="#1e293b" />
-
-</head>
-<body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-50">
-  <div id="root"></div>
-
-  <!-- IMPORTANTE: só isso em produção Vite -->
-  <script type="module" src="/index.jsx"></script>
-
-  <!-- Service worker desativado por padrão. Para ativar depois:
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/service-worker.js');
-    }
-  </script>
-  -->
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Coach UnB 2026 Medicina</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#1e293b" />
+    <!-- Tailwind CDN pode ficar por enquanto -->
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-50">
+    <div id="root"></div>
+    <!-- ÚNICO entry do Vite (dev). No build o Vite troca para /assets/index-*.js -->
+    <script type="module" src="/index.jsx"></script>
+  </body>
 </html>
