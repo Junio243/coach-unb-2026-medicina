@@ -18,3 +18,9 @@ test('parses JSON even when surrounded by extraneous text', () => {
   const result = safeParseJSON(noisyJson);
   assert.deepEqual(result, { foo: 1 });
 });
+
+test('parses first JSON when multiple objects are present', () => {
+  const mixedJson = 'one {"a": 1} two {"b": 2}';
+  const result = safeParseJSON(mixedJson);
+  assert.deepEqual(result, { a: 1 });
+});
