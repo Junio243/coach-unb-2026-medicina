@@ -142,7 +142,9 @@ export default function HistoryPage() {
         title={selected?.subject || selected?.payload?.title}
       >
         {selected?.kind === 'plan' && <PlanView payload={selected.payload} />}
-        {selected?.kind === 'flashcards' && <FlashcardsView payload={selected.payload} />}
+        {selected?.kind === 'flashcards' && (
+          <FlashcardsView payload={selected.payload} id={selected.id} />
+        )}
         {selected?.kind === 'quiz' && (
           <QuizView payload={selected.payload} onPlay={() => onPlay(selected)} />
         )}
