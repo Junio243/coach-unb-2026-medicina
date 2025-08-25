@@ -20,6 +20,7 @@ const Perfil = React.lazy(() => import('./pages/Perfil.jsx'));
 const History = React.lazy(() => import('./pages/History.jsx'));
 const QuizPlay = React.lazy(() => import('./pages/QuizPlay.jsx'));
 const Subjects = React.lazy(() => import('./pages/Subjects.jsx'));
+const SubjectDetails = React.lazy(() => import('./pages/SubjectDetails.jsx'));
 const Professor = React.lazy(() => import('./pages/Professor.jsx'));
 const Psycho = React.lazy(() => import('./pages/Psycho.jsx'));
 const Home = React.lazy(() => import('./pages/Home.jsx'));
@@ -80,6 +81,7 @@ if (supabase?.auth?.onAuthStateChange) {
                                     <Route path="/exam-info" element={isOnboardingComplete ? <ExamInfo /> : <Navigate to="/onboarding" />} />
                                     <Route path="/history" element={isOnboardingComplete ? <History /> : <Navigate to="/onboarding" />} />
                                     <Route path="/subjects" element={isOnboardingComplete ? <Subjects /> : <Navigate to="/onboarding" />} />
+                                    <Route path="/subjects/:subjectId" element={isOnboardingComplete ? <SubjectDetails /> : <Navigate to="/onboarding" />} />
                                     <Route path="/professor" element={isOnboardingComplete ? <Professor /> : <Navigate to="/onboarding" />} />
                                     <Route path="/psycho" element={isOnboardingComplete ? <Psycho /> : <Navigate to="/onboarding" />} />
                                     <Route path="/quiz/:id" element={isOnboardingComplete ? <QuizPlay /> : <Navigate to="/onboarding" />} />
