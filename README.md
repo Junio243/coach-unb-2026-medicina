@@ -55,3 +55,20 @@ No Render, crie um **Web Service** apontando para essa pasta com Node 20 e defin
 - `ALLOW_ORIGIN=https://coach-unb-2026-medicina.onrender.com`
 
 No front, use a URL pública desse serviço em `VITE_VIDEO_PROXY_URL`.
+
+## Disciplinas e recursos
+
+A plataforma Coach UnB indica a teoria essencial para cada matéria e oferece baterias de questões padronizadas no modelo Cebraspe. Também há minissimulados por disciplina, testes práticos com respostas comentadas e exercícios de aprofundamento.
+
+Disciplinas abordadas no preparatório:
+
+- História
+- Geografia
+- Sociologia
+- Filosofia
+- Literatura e Interpretação de Texto
+- Gramática
+- Física
+- Química
+- Matemática
+- Biologia
