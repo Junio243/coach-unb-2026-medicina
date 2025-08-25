@@ -3,7 +3,7 @@ import { generateSimulado } from "../services/geminiService.js";
 import { saveHistory } from "../services/historyService.js";
 import { createQuizFromPayload } from "../services/quizService.js";
 import { listUserSubjects } from "../services/subjectsService.js";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 export default function SimuladosPage() {
   const [materia, setMateria] = useState("Fisiologia");
@@ -16,10 +16,18 @@ export default function SimuladosPage() {
   const [info, setInfo] = useState("");
   const [subjects, setSubjects] = useState([]);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
     listUserSubjects().then(setSubjects).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    const subj = searchParams.get("subject");
+    if (subj) setMateria(subj);
+    const c = searchParams.get("count");
+    if (c) setQtd(c);
+  }, [searchParams]);
 
   async function onGerar() {
     try {

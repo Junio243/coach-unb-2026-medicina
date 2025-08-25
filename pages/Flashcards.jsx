@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { generateFlashcards } from "../services/geminiService.js";
 import { saveHistory, getHistoryById } from "../services/historyService.js";
 import { listUserSubjects } from "../services/subjectsService.js";
@@ -15,12 +15,18 @@ export default function FlashcardsPage() {
   const [info, setInfo] = useState("");
   const [subjects, setSubjects] = useState([]);
   const { historyId } = useParams();
+  const [searchParams] = useSearchParams();
   const [studyIndex, setStudyIndex] = useState(0);
   const [showBack, setShowBack] = useState(false);
 
   useEffect(() => {
     listUserSubjects().then(setSubjects).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    const subj = searchParams.get("subject");
+    if (subj) setAssunto(subj);
+  }, [searchParams]);
 
   useEffect(() => {
     async function loadFromHistory() {
