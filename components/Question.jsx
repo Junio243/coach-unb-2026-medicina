@@ -29,8 +29,10 @@ export default function Question({ question }) {
       <div className="flex justify-between items-start mb-4">
         <p className="font-semibold text-slate-800 dark:text-slate-100 flex-1">{question.statement}</p>
         <div className="flex items-center gap-2 ml-4">
-          <Badge text={question.year} />
-          <Badge text={question.difficulty} color={question.difficulty === 'fácil' ? 'green' : 'yellow'} />
+          <Badge>{question.year}</Badge>
+          <Badge color={question.difficulty === 'fácil' ? 'green' : 'indigo'}>
+            {question.difficulty}
+          </Badge>
         </div>
       </div>
 

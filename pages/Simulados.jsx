@@ -121,7 +121,7 @@ export default function SimuladosPage() {
           >
             <option value="iniciante">iniciante</option>
             <option value="intermediario">intermediário</option>
-            <option value="avancado">avancado</option>
+            <option value="avancado">avançado</option>
           </select>
         </label>
 
