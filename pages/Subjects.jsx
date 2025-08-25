@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { listUserSubjects, addUserSubject, removeUserSubject } from "../services/subjectsService.js";
+import defaultSubjects from "../data/subjects.json";
 
 export default function SubjectsPage() {
   const [subjects, setSubjects] = useState([]);
@@ -45,8 +46,22 @@ export default function SubjectsPage() {
   }
 
   return (
-    <main className="p-6 max-w-lg mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Minhas matérias</h1>
+    <main className="p-6 max-w-lg mx-auto space-y-8">
+      <section>
+        <h1 className="text-2xl font-bold mb-4">Disciplinas do preparatório</h1>
+        <p className="mb-4">
+          Nossa plataforma indica a teoria essencial e oferece questões no modelo Cebraspe,
+          minissimulados por matéria, testes práticos comentados e exercícios de aprofundamento.
+        </p>
+        <ul className="list-disc pl-5">
+          {defaultSubjects.map((s) => (
+            <li key={s}>{s}</li>
+          ))}
+        </ul>
+      </section>
+
+      <section>
+        <h2 className="text-xl font-bold mb-4">Minhas matérias</h2>
 
       <form onSubmit={onAdd} className="flex gap-2 mb-4">
         <input
@@ -88,6 +103,7 @@ export default function SubjectsPage() {
           {subjects.length === 0 && <li>Nenhuma matéria salva.</li>}
         </ul>
       )}
+      </section>
     </main>
   );
 }
