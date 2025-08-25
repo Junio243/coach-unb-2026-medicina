@@ -1,0 +1,9 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .font-\[Atkinson_Hyperlegible\] {
+    font-family: 'Atkinson Hyperlegible', sans-serif;
+  }
+}
