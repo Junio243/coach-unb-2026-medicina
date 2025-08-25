@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-export default function FlashcardsView({ payload = [] }) {
+export default function FlashcardsView({ payload = [], id }) {
+  const navigate = useNavigate();
   const [show, setShow] = useState({});
   if (!Array.isArray(payload)) return <div>Nenhum card.</div>;
   return (
@@ -17,6 +19,12 @@ export default function FlashcardsView({ payload = [] }) {
           </button>
         </div>
       ))}
+      <button
+        onClick={() => navigate(`/flashcards/${id}`)}
+        className="mt-4 bg-indigo-600 text-white px-4 py-2 rounded"
+      >
+        Estudar flashcards
+      </button>
     </div>
   );
 }
